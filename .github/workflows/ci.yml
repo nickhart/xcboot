@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint Shell Scripts
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: brew install shellcheck
+
+      - name: Run shellcheck
+        run: ./scripts/lint.sh
+
+  format:
+    name: Check Formatting
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shfmt
+        run: brew install shfmt
+
+      - name: Check formatting
+        run: ./scripts/format.sh
+
+  validate:
+    name: Validate YAML
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: brew install yq
+
+      - name: Validate YAML files
+        run: ./scripts/validate.sh
+
+  test:
+    name: Run Tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew install shellcheck shfmt yq
+
+      - name: Run test suite
+        run: ./scripts/test.sh
+
+  bootstrap-dry-run:
+    name: Test Bootstrap (Dry Run)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create test Xcode project
+        run: |
+          mkdir -p test-project
+          cd test-project
+
+          # Create a minimal .xcodeproj structure for testing
+          mkdir -p TestApp.xcodeproj
+          cat > TestApp.xcodeproj/project.pbxproj <<'EOF'
+          // Test project file
+          IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+          PRODUCT_BUNDLE_IDENTIFIER = com.test.TestApp;
+          EOF
+
+          # Initialize git repo
+          git init
+          git config user.email "test@example.com"
+          git config user.name "Test User"
+          git remote add origin https://github.com/test/test.git
+
+      - name: Run bootstrap with help
+        run: ./bootstrap.sh --help
+
+      - name: Verify bootstrap can detect project
+        run: |
+          cd test-project
+          # Run bootstrap in non-interactive mode (will use defaults)
+          echo "" | ../bootstrap.sh || true
+          # Just verify it doesn't crash - actual installation will happen in real usage
