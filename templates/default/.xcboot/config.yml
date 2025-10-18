@@ -1,0 +1,59 @@
+# xcboot configuration
+# This file is managed by xcboot and can be customized for your project
+# For user-specific overrides, create .xcboot.yml in the project root (gitignored)
+
+version: "1.0"
+
+# Project metadata (auto-detected by bootstrap.sh)
+project:
+  name: {{PROJECT_NAME}}
+  bundle_id_root: {{BUNDLE_ID_ROOT}}
+  deployment_target: {{DEPLOYMENT_TARGET}}
+  swift_version: {{SWIFT_VERSION}}
+
+# CI/CD provider configuration
+ci:
+  provider: {{CI_PROVIDER}}  # github, gitlab, bitbucket
+  enabled: true
+
+# Project structure
+structure:
+  type: mvvm  # mvvm, clean, none
+  generate_status: true
+
+# Simulator configuration (replaces standalone simulator.yml)
+# These settings are used by scripts/simulator.sh, scripts/test.sh, scripts/build.sh
+simulators:
+  tests:
+    name: {{SIMULATOR_TESTS_NAME}}
+    device: {{SIMULATOR_TESTS_DEVICE}}
+    os: {{SIMULATOR_TESTS_OS}}
+    arch: {{SIMULATOR_TESTS_ARCH}}
+  ui-tests:
+    name: {{SIMULATOR_UI_TESTS_NAME}}
+    device: {{SIMULATOR_UI_TESTS_DEVICE}}
+    os: {{SIMULATOR_UI_TESTS_OS}}
+    arch: {{SIMULATOR_UI_TESTS_ARCH}}
+
+# Development tools
+tools:
+  swiftlint: true
+  swiftformat: true
+  xcodegen: true
+  pre_commit_hooks: true
+
+# GitHub-specific settings (when ci.provider = github)
+github:
+  ci_workflow: true
+  pr_template: true
+  enable_caching: true
+
+# GitLab-specific settings (when ci.provider = gitlab)
+gitlab:
+  ci_pipeline: true
+  mr_template: true
+
+# Bitbucket-specific settings (when ci.provider = bitbucket)
+bitbucket:
+  pipelines: true
+  pr_template: true
