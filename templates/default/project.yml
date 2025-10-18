@@ -37,18 +37,18 @@ settings:
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
 
 targets:
-  {{PROJECT_NAME}}:
+  "{{PROJECT_NAME}}":
     type: application
     platform: iOS
     deploymentTarget: "{{DEPLOYMENT_TARGET}}"
     sources:
-      - {{PROJECT_NAME}}
+      - "{{PROJECT_NAME}}"
     resources:
-      - {{PROJECT_NAME}}/Resources
+      - "{{PROJECT_NAME}}/Resources"
     info:
-      path: {{PROJECT_NAME}}/Info.plist
+      path: "{{PROJECT_NAME}}/Info.plist"
       properties:
-        CFBundleDisplayName: {{PROJECT_NAME}}
+        CFBundleDisplayName: "{{PROJECT_NAME}}"
         CFBundleVersion: "1"
         CFBundleShortVersionString: "1.0"
         UILaunchStoryboardName: LaunchScreen
@@ -71,41 +71,41 @@ targets:
               - UISceneConfigurationName: Default Configuration
                 UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
 
-  {{PROJECT_NAME}}Tests:
+  "{{PROJECT_NAME}}Tests":
     type: bundle.unit-test
     platform: iOS
     deploymentTarget: "{{DEPLOYMENT_TARGET}}"
     sources:
-      - {{PROJECT_NAME}}Tests
+      - "{{PROJECT_NAME}}Tests"
     dependencies:
-      - target: {{PROJECT_NAME}}
+      - target: "{{PROJECT_NAME}}"
 
-  {{PROJECT_NAME}}UITests:
+  "{{PROJECT_NAME}}UITests":
     type: bundle.ui-testing
     platform: iOS
     deploymentTarget: "{{DEPLOYMENT_TARGET}}"
     sources:
-      - {{PROJECT_NAME}}UITests
+      - "{{PROJECT_NAME}}UITests"
     dependencies:
-      - target: {{PROJECT_NAME}}
+      - target: "{{PROJECT_NAME}}"
 
 schemes:
-  {{PROJECT_NAME}}:
+  "{{PROJECT_NAME}}":
     build:
       targets:
-        {{PROJECT_NAME}}: all
-        {{PROJECT_NAME}}Tests: [test]
-        {{PROJECT_NAME}}UITests: [test]
+        "{{PROJECT_NAME}}": all
+        "{{PROJECT_NAME}}Tests": [test]
+        "{{PROJECT_NAME}}UITests": [test]
     run:
       config: Debug
     test:
       config: Debug
       gatherCoverageData: true
       coverageTargets:
-        - {{PROJECT_NAME}}
+        - "{{PROJECT_NAME}}"
       targets:
-        - {{PROJECT_NAME}}Tests
-        - {{PROJECT_NAME}}UITests
+        - "{{PROJECT_NAME}}Tests"
+        - "{{PROJECT_NAME}}UITests"
     profile:
       config: Release
     analyze:

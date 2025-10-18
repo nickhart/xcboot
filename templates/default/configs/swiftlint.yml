@@ -39,9 +39,9 @@ opt_in_rules:
   - yoda_condition
 
 included:
-  - {{PROJECT_NAME}}
-  - {{PROJECT_NAME}}Tests
-  - {{PROJECT_NAME}}UITests
+  - "{{PROJECT_NAME}}"
+  - "{{PROJECT_NAME}}Tests"
+  - "{{PROJECT_NAME}}UITests"
 
 excluded:
   - Pods
