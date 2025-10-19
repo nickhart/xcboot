@@ -209,9 +209,17 @@ run_bootstrap() {
 
   # Run bootstrap in non-interactive mode (pipe empty input)
   if $VERBOSE; then
-    echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" "$flags"
+    if [[ -n $flags ]]; then
+      echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" "$flags"
+    else
+      echo "" | bash "$XCBOOT_ROOT/bootstrap.sh"
+    fi
   else
-    echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" "$flags" >/dev/null 2>&1
+    if [[ -n $flags ]]; then
+      echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" "$flags" >/dev/null 2>&1
+    else
+      echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" >/dev/null 2>&1
+    fi
   fi
 
   # Unset local path
