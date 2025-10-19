@@ -6,7 +6,11 @@ set -euo pipefail
 # All test execution happens in /tmp - NEVER modifies xcboot repo
 
 XCBOOT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TEST_ROOT="/tmp/xcboot-test-$(date +%s)"
+
+# Use GitHub runner temp if available, otherwise /tmp for local testing
+TEMP_BASE="${RUNNER_TEMP:-/tmp}"
+TEST_ROOT="${TEMP_BASE}/xcboot-test-$(date +%s)"
+
 KEEP_ARTIFACTS=false
 VERBOSE=false
 
@@ -71,7 +75,9 @@ ${BOLD}EXAMPLES:${NC}
   ./scripts/integration-test.sh --verbose
 
 ${BOLD}SAFETY:${NC}
-  • All tests run in /tmp/xcboot-test-{timestamp}/
+  • All tests run in isolated temp directory
+    - GitHub CI: \$RUNNER_TEMP/xcboot-test-{timestamp}/
+    - Local: /tmp/xcboot-test-{timestamp}/
   • Never modifies xcboot repository
   • Read-only access to xcboot source
   • Automatic cleanup on success
