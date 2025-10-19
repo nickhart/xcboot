@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091,SC2001,SC2005,SC2155,SC2162  # Style preferences acceptable
 set -euo pipefail
 
 # Build script for xcboot projects
@@ -50,36 +51,36 @@ EOF
 parse_arguments() {
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --device)
-        BUILD_FOR_DEVICE=true
-        shift
-        ;;
-      --release)
-        CONFIGURATION="Release"
-        shift
-        ;;
-      --clean)
-        CLEAN_BUILD=true
-        shift
-        ;;
-      --verbose)
-        VERBOSE=true
-        shift
-        ;;
-      --help|-h)
-        show_help
-        exit 0
-        ;;
-      -*)
-        log_error "Unknown option: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
-      *)
-        log_error "Unexpected argument: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
+    --device)
+      BUILD_FOR_DEVICE=true
+      shift
+      ;;
+    --release)
+      CONFIGURATION="Release"
+      shift
+      ;;
+    --clean)
+      CLEAN_BUILD=true
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    --help | -h)
+      show_help
+      exit 0
+      ;;
+    -*)
+      log_error "Unknown option: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
+    *)
+      log_error "Unexpected argument: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
     esac
   done
 }
@@ -100,7 +101,7 @@ get_project_info() {
     exit 1
   fi
 
-  if [[ "$PROJECT_NAME" == "null" || -z "$PROJECT_NAME" ]]; then
+  if [[ $PROJECT_NAME == "null" || -z $PROJECT_NAME ]]; then
     log_error "Could not determine project name from project.yml"
     exit 1
   fi
@@ -121,33 +122,33 @@ determine_destination() {
       config_file=".xcboot/config.yml"
     fi
 
-    if [[ -n "$config_file" ]] && command_exists yq; then
+    if [[ -n $config_file ]] && command_exists yq; then
       simulator_name=$(yq '.simulators.tests.device' "$config_file" 2>/dev/null || echo "")
       simulator_arch=$(yq '.simulators.tests.arch' "$config_file" 2>/dev/null || echo "")
-      if [[ "$simulator_name" == "null" || -z "$simulator_name" ]]; then
+      if [[ $simulator_name == "null" || -z $simulator_name ]]; then
         simulator_name=""
       fi
-      if [[ "$simulator_arch" == "null" || -z "$simulator_arch" ]]; then
+      if [[ $simulator_arch == "null" || -z $simulator_arch ]]; then
         simulator_arch=""
       fi
     fi
 
     # Fallback to hardcoded defaults based on deployment target
-    if [[ -z "$simulator_name" ]]; then
+    if [[ -z $simulator_name ]]; then
       simulator_name="iPhone 16 Pro"
 
-      if [[ "$DEPLOYMENT_TARGET" != "null" && -n "$DEPLOYMENT_TARGET" ]]; then
+      if [[ $DEPLOYMENT_TARGET != "null" && -n $DEPLOYMENT_TARGET ]]; then
         local major_version
         major_version=$(echo "$DEPLOYMENT_TARGET" | cut -d'.' -f1)
 
-        if [[ "$major_version" -lt "17" ]]; then
+        if [[ $major_version -lt "17" ]]; then
           simulator_name="iPhone 15 Pro"
         fi
       fi
     fi
 
     # Default architecture if not specified
-    if [[ -z "$simulator_arch" ]]; then
+    if [[ -z $simulator_arch ]]; then
       # Auto-detect Mac architecture
       if [[ "$(uname -m)" == "arm64" ]]; then
         simulator_arch="arm64"
@@ -164,13 +165,13 @@ determine_destination() {
       local available_sim
       available_sim=$(find_available_iphone_simulator)
 
-      if [[ -n "$available_sim" ]]; then
+      if [[ -n $available_sim ]]; then
         log_info "Using available simulator: $available_sim"
         simulator_name="$available_sim"
       else
         log_error "No iPhone simulators found. Please install iOS Simulator or run:"
         log_info "  ./scripts/simulator.sh list"
-        log_info "  ./scripts/simulator.sh config-tests \"<device-name>\""
+        log_info '  ./scripts/simulator.sh config-tests "<device-name>"'
         exit 1
       fi
     fi
@@ -186,17 +187,17 @@ validate_simulator_exists() {
 
 find_available_iphone_simulator() {
   # Find first available iPhone simulator
-  xcrun simctl list devices available 2>/dev/null | \
-    grep "iPhone" | \
-    head -1 | \
-    sed 's/^[[:space:]]*//' | \
-    sed 's/ (.*$//'
+  xcrun simctl list devices available 2>/dev/null \
+    | grep "iPhone" \
+    | head -1 \
+    | sed 's/^[[:space:]]*//' \
+    | sed 's/ (.*$//'
 }
 
 check_project_file() {
   local xcodeproj_path="${PROJECT_NAME}.xcodeproj"
 
-  if [[ ! -d "$xcodeproj_path" ]]; then
+  if [[ ! -d $xcodeproj_path ]]; then
     log_error "Xcode project not found: $xcodeproj_path"
     log_info "Generate it with: xcodegen"
     exit 1
@@ -260,15 +261,9 @@ build_project() {
     )
   fi
 
-  # Add verbose output if requested
-  local output_filter=""
+  # Log verbose mode if enabled
   if $VERBOSE; then
     log_info "Running with verbose output..."
-  else
-    # Use xcbeautify if available for prettier output
-    if command_exists xcbeautify; then
-      output_filter="| xcbeautify"
-    fi
   fi
 
   # Execute build
@@ -303,9 +298,9 @@ show_build_artifacts() {
     build_dir="${build_dir}-iphonesimulator"
   fi
 
-  if [[ -d "$build_dir" ]]; then
+  if [[ -d $build_dir ]]; then
     local app_path="${build_dir}/${PROJECT_NAME}.app"
-    if [[ -d "$app_path" ]]; then
+    if [[ -d $app_path ]]; then
       echo "  📱 App: $app_path"
 
       # Show app size

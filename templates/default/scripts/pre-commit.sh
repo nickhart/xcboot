@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091,SC2001,SC2005,SC2155,SC2162  # Style preferences acceptable
 set -euo pipefail
 
 # Pre-commit hook for xcboot projects
@@ -29,7 +30,7 @@ get_staged_swift_files() {
 
 staged_files=$(get_staged_swift_files)
 
-if [[ -z "$staged_files" ]]; then
+if [[ -z $staged_files ]]; then
   log_info "No Swift files staged for commit, skipping Swift-specific checks"
   exit 0
 fi
@@ -65,7 +66,7 @@ run_swiftformat() {
   if $AUTO_FIX; then
     # Format staged files
     echo "$staged_files" | while read -r file; do
-      if [[ -f "$file" ]]; then
+      if [[ -f $file ]]; then
         swiftformat "$file"
       fi
     done
@@ -74,7 +75,7 @@ run_swiftformat() {
     local modified_files
     modified_files=$(echo "$staged_files" | xargs git diff --name-only 2>/dev/null || true)
 
-    if [[ -n "$modified_files" ]]; then
+    if [[ -n $modified_files ]]; then
       log_info "SwiftFormat made changes to:"
       echo "$modified_files" | sed 's/^/  • /'
 
@@ -89,14 +90,14 @@ run_swiftformat() {
     # Check formatting without fixing
     local format_issues=""
     echo "$staged_files" | while read -r file; do
-      if [[ -f "$file" ]]; then
+      if [[ -f $file ]]; then
         if ! swiftformat --lint "$file" >/dev/null 2>&1; then
           format_issues="$format_issues$file "
         fi
       fi
     done
 
-    if [[ -n "$format_issues" ]]; then
+    if [[ -n $format_issues ]]; then
       log_error "SwiftFormat issues found in: $format_issues"
       log_info "Fix with: ./scripts/format.sh --fix"
       format_failed=true
@@ -115,12 +116,13 @@ run_swiftlint() {
   log_info "🔍 Running SwiftLint..."
 
   local lint_failed=false
-  local temp_file=$(mktemp)
+  local temp_file
+  temp_file=$(mktemp)
 
   # Create temporary file with staged file list
-  echo "$staged_files" > "$temp_file"
+  echo "$staged_files" >"$temp_file"
 
-  if swiftlint lint < "$temp_file" 2>&1; then
+  if swiftlint lint <"$temp_file" 2>&1; then
     log_success "SwiftLint check passed"
   else
     local exit_code=$?
@@ -145,15 +147,13 @@ run_swiftlint() {
 run_basic_checks() {
   log_info "✅ Running basic checks..."
 
-  local issues=()
-
   # Check for TODO/FIXME in staged files (informational)
   local todo_count=0
   echo "$staged_files" | while read -r file; do
-    if [[ -f "$file" ]]; then
+    if [[ -f $file ]]; then
       local file_todos
       file_todos=$(grep -n "TODO\|FIXME" "$file" 2>/dev/null || true)
-      if [[ -n "$file_todos" ]]; then
+      if [[ -n $file_todos ]]; then
         todo_count=$((todo_count + 1))
       fi
     fi
@@ -166,7 +166,7 @@ run_basic_checks() {
   # Check for debug prints (warning)
   local debug_prints=()
   echo "$staged_files" | while read -r file; do
-    if [[ -f "$file" ]]; then
+    if [[ -f $file ]]; then
       if grep -q "print(" "$file" 2>/dev/null; then
         debug_prints+=("$file")
       fi

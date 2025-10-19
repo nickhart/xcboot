@@ -43,7 +43,7 @@ echo
 # Find all YAML files in templates (excluding .DS_Store, etc.)
 yaml_files=$(find templates -type f \( -name "*.yml" -o -name "*.yaml" \) -not -path "*/.*")
 
-if [[ -z "$yaml_files" ]]; then
+if [[ -z $yaml_files ]]; then
   log_warning "No YAML files found in templates/"
   exit 0
 fi
@@ -71,7 +71,7 @@ while IFS= read -r file; do
     yq eval '.' "$file" 2>&1 || true
     echo
   fi
-done <<< "$yaml_files"
+done <<<"$yaml_files"
 
 echo
 echo "========================================="

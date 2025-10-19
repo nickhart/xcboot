@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091,SC2001,SC2005,SC2155,SC2162  # Style preferences acceptable
 set -euo pipefail
 
 # Preflight script for xcboot projects
@@ -55,69 +56,69 @@ EOF
 parse_arguments() {
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --no-fix)
-        FIX_ISSUES=false
-        shift
-        ;;
-      --no-tests)
-        RUN_TESTS=false
-        shift
-        ;;
-      --no-build)
-        BUILD_PROJECT=false
-        shift
-        ;;
-      --release)
-        CONFIGURATION="Release"
-        shift
-        ;;
-      --verbose)
-        VERBOSE=true
-        shift
-        ;;
-      --help|-h)
-        show_help
-        exit 0
-        ;;
-      -*)
-        log_error "Unknown option: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
-      *)
-        log_error "Unexpected argument: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
+    --no-fix)
+      FIX_ISSUES=false
+      shift
+      ;;
+    --no-tests)
+      RUN_TESTS=false
+      shift
+      ;;
+    --no-build)
+      BUILD_PROJECT=false
+      shift
+      ;;
+    --release)
+      CONFIGURATION="Release"
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    --help | -h)
+      show_help
+      exit 0
+      ;;
+    -*)
+      log_error "Unknown option: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
+    *)
+      log_error "Unexpected argument: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
     esac
   done
 }
 
 check_prerequisites() {
   log_info "Checking prerequisites..."
-  
+
   local required_tools=(swiftformat swiftlint xcodebuild)
   local missing_tools=()
-  
+
   for tool in "${required_tools[@]}"; do
     if ! command_exists "$tool"; then
       missing_tools+=("$tool")
     fi
   done
-  
+
   if [[ ${#missing_tools[@]} -gt 0 ]]; then
     log_error "Missing required tools: ${missing_tools[*]}"
     log_info "Install missing tools with: brew bundle install"
     exit 1
   fi
-  
+
   # Check for project.yml
   if [[ ! -f "project.yml" ]]; then
     log_error "project.yml not found"
     log_info "Run './scripts/setup.sh' first to configure the project"
     exit 1
   fi
-  
+
   # Check for Xcode project
   local project_name
   if command_exists yq; then
@@ -128,14 +129,14 @@ check_prerequisites() {
       exit 1
     fi
   fi
-  
+
   log_success "Prerequisites satisfied"
 }
 
 run_formatting() {
   log_info "🎨 Step 1: Code Formatting"
   echo
-  
+
   local format_args=()
   if $FIX_ISSUES; then
     format_args+=("--fix")
@@ -143,21 +144,21 @@ run_formatting() {
   if $VERBOSE; then
     format_args+=("--verbose")
   fi
-  
+
   if ./scripts/format.sh "${format_args[@]}"; then
     log_success "✅ Formatting check passed"
   else
     log_error "❌ Formatting check failed"
     return 1
   fi
-  
+
   echo
 }
 
 run_linting() {
   log_info "🔍 Step 2: Code Linting"
   echo
-  
+
   local lint_args=()
   if $FIX_ISSUES; then
     lint_args+=("--fix")
@@ -166,14 +167,14 @@ run_linting() {
     # SwiftLint doesn't have a verbose flag, but we can show more context
     lint_args+=("--quiet")
   fi
-  
+
   if ./scripts/lint.sh "${lint_args[@]}"; then
     log_success "✅ Linting check passed"
   else
     log_error "❌ Linting check failed"
     return 1
   fi
-  
+
   echo
 }
 
@@ -183,25 +184,25 @@ run_build() {
     echo
     return 0
   fi
-  
+
   log_info "🏗️  Step 3: Project Build"
   echo
-  
+
   local build_args=()
-  if [[ "$CONFIGURATION" == "Release" ]]; then
+  if [[ $CONFIGURATION == "Release" ]]; then
     build_args+=("--release")
   fi
   if $VERBOSE; then
     build_args+=("--verbose")
   fi
-  
+
   if ./scripts/build.sh "${build_args[@]+"${build_args[@]}"}"; then
     log_success "✅ Build check passed"
   else
     log_error "❌ Build check failed"
     return 1
   fi
-  
+
   echo
 }
 
@@ -211,18 +212,18 @@ run_tests() {
     echo
     return 0
   fi
-  
+
   log_info "🧪 Step 4: Tests"
   echo
-  
-  local test_args=("--all")  # Run both unit and UI tests
-  if [[ "$CONFIGURATION" == "Release" ]]; then
+
+  local test_args=("--all") # Run both unit and UI tests
+  if [[ $CONFIGURATION == "Release" ]]; then
     test_args+=("--release")
   fi
   if $VERBOSE; then
     test_args+=("--verbose")
   fi
-  
+
   if ./scripts/test.sh "${test_args[@]}"; then
     log_success "✅ Tests passed"
   else
@@ -230,7 +231,7 @@ run_tests() {
     # Don't fail preflight for test failures - they might be environment-specific
     # return 1
   fi
-  
+
   echo
 }
 
@@ -239,7 +240,7 @@ show_preflight_summary() {
   if command_exists yq && [[ -f "project.yml" ]]; then
     project_name=$(yq eval '.name' project.yml 2>/dev/null || echo "Unknown")
   fi
-  
+
   echo "================================================"
   log_success "🎉 Preflight Check Complete!"
   echo
@@ -247,7 +248,7 @@ show_preflight_summary() {
   log_info "Configuration: $CONFIGURATION"
   log_info "Auto-fix: $(if $FIX_ISSUES; then echo "enabled"; else echo "disabled"; fi)"
   echo
-  
+
   log_info "Summary:"
   echo "  ✅ Code formatting validated"
   echo "  ✅ Code quality checks passed"
@@ -257,14 +258,14 @@ show_preflight_summary() {
   if $RUN_TESTS; then
     echo "  ✅ Tests executed"
   fi
-  
+
   echo
   log_info "Your code is ready for:"
   echo "  • Git commit"
   echo "  • Pull request creation"
   echo "  • Code review"
   echo "  • CI/CD pipeline"
-  
+
   if $FIX_ISSUES; then
     echo
     log_info "Files may have been modified by auto-fixes."
@@ -282,7 +283,7 @@ show_preflight_failure() {
   echo "  • Run with --verbose for more details"
   echo "  • Check individual tools:"
   echo "    - ./scripts/format.sh --fix"
-  echo "    - ./scripts/lint.sh --fix" 
+  echo "    - ./scripts/lint.sh --fix"
   echo "    - ./scripts/build.sh"
   echo "    - ./scripts/test.sh"
   echo
@@ -295,37 +296,37 @@ main() {
   echo "🚀 xcboot Preflight Check"
   echo "========================="
   echo
-  
+
   parse_arguments "$@"
   check_prerequisites
-  
+
   local start_time
   start_time=$(date +%s)
-  
+
   local failed_steps=()
-  
+
   # Run all preflight steps
   if ! run_formatting; then
     failed_steps+=("formatting")
   fi
-  
+
   if ! run_linting; then
     failed_steps+=("linting")
   fi
-  
+
   if ! run_build; then
     failed_steps+=("build")
   fi
-  
+
   if ! run_tests; then
     # Tests failures are warnings, not hard failures
     log_warning "Tests had issues but continuing..."
   fi
-  
+
   local end_time duration
   end_time=$(date +%s)
   duration=$((end_time - start_time))
-  
+
   # Show results
   if [[ ${#failed_steps[@]} -eq 0 ]]; then
     show_preflight_summary

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091,SC2001,SC2005,SC2155,SC2162  # Style preferences acceptable
 set -euo pipefail
 
 # Test script for xcboot projects
@@ -13,7 +14,6 @@ source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 # Default values
 RUN_UNIT_TESTS=true
 RUN_UI_TESTS=false
-RUN_ALL_TESTS=false
 CONFIGURATION="Debug"
 ENABLE_COVERAGE=true
 VERBOSE=false
@@ -61,48 +61,47 @@ EOF
 parse_arguments() {
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --ui)
-        RUN_UNIT_TESTS=false
-        RUN_UI_TESTS=true
-        shift
-        ;;
-      --unit)
-        RUN_UNIT_TESTS=true
-        RUN_UI_TESTS=false
-        shift
-        ;;
-      --all)
-        RUN_ALL_TESTS=true
-        RUN_UNIT_TESTS=true
-        RUN_UI_TESTS=true
-        shift
-        ;;
-      --release)
-        CONFIGURATION="Release"
-        shift
-        ;;
-      --no-coverage)
-        ENABLE_COVERAGE=false
-        shift
-        ;;
-      --verbose)
-        VERBOSE=true
-        shift
-        ;;
-      --help|-h)
-        show_help
-        exit 0
-        ;;
-      -*)
-        log_error "Unknown option: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
-      *)
-        log_error "Unexpected argument: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
+    --ui)
+      RUN_UNIT_TESTS=false
+      RUN_UI_TESTS=true
+      shift
+      ;;
+    --unit)
+      RUN_UNIT_TESTS=true
+      RUN_UI_TESTS=false
+      shift
+      ;;
+    --all)
+      RUN_UNIT_TESTS=true
+      RUN_UI_TESTS=true
+      shift
+      ;;
+    --release)
+      CONFIGURATION="Release"
+      shift
+      ;;
+    --no-coverage)
+      ENABLE_COVERAGE=false
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    --help | -h)
+      show_help
+      exit 0
+      ;;
+    -*)
+      log_error "Unknown option: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
+    *)
+      log_error "Unexpected argument: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
     esac
   done
 }
@@ -123,14 +122,14 @@ get_project_info() {
     exit 1
   fi
 
-  if [[ "$PROJECT_NAME" == "null" || -z "$PROJECT_NAME" ]]; then
+  if [[ $PROJECT_NAME == "null" || -z $PROJECT_NAME ]]; then
     log_error "Could not determine project name from project.yml"
     exit 1
   fi
 }
 
 get_simulator_config() {
-  local test_type="$1"  # "tests" or "ui-tests"
+  local test_type="$1" # "tests" or "ui-tests"
   local config_key="simulators.$test_type"
 
   # Check for user overrides first, fall back to system config
@@ -141,14 +140,14 @@ get_simulator_config() {
     config_file=".xcboot/config.yml"
   fi
 
-  if [[ -n "$config_file" ]] && command_exists yq ; then
+  if [[ -n $config_file ]] && command_exists yq; then
     local device os arch
     device=$(yq eval ".$config_key.device" "$config_file" 2>/dev/null || echo "")
     os=$(yq eval ".$config_key.os" "$config_file" 2>/dev/null || echo "")
     arch=$(yq eval ".$config_key.arch" "$config_file" 2>/dev/null || echo "")
 
     # Validate configuration
-    if [[ -n "$device" && "$device" != "null" ]]; then
+    if [[ -n $device && $device != "null" ]]; then
       echo "$device|$os|$arch"
       return
     fi
@@ -158,14 +157,14 @@ get_simulator_config() {
   local default_device="iPhone 16 Pro"
   local default_os="$DEPLOYMENT_TARGET"
 
-  if [[ "$default_os" == "null" || -z "$default_os" ]]; then
+  if [[ $default_os == "null" || -z $default_os ]]; then
     default_os="26.0"
   fi
 
   # Adjust device based on iOS version
   local major_version
   major_version=$(echo "$default_os" | cut -d'.' -f1)
-  if [[ "$major_version" -lt "17" ]]; then
+  if [[ $major_version -lt "17" ]]; then
     default_device="iPhone 15 Pro"
   fi
 
@@ -192,17 +191,17 @@ check_test_targets() {
     fi
   fi
 
-  if $RUN_UNIT_TESTS && [[ "$has_unit_tests" != "true" ]]; then
+  if $RUN_UNIT_TESTS && [[ $has_unit_tests != "true" ]]; then
     log_warning "Unit test target '${PROJECT_NAME}Tests' not found"
     RUN_UNIT_TESTS=false
   fi
 
-  if $RUN_UI_TESTS && [[ "$has_ui_tests" != "true" ]]; then
+  if $RUN_UI_TESTS && [[ $has_ui_tests != "true" ]]; then
     log_warning "UI test target '${PROJECT_NAME}UITests' not found"
     RUN_UI_TESTS=false
   fi
 
-  if [[ "$RUN_UNIT_TESTS" == "false" && "$RUN_UI_TESTS" == "false" ]]; then
+  if [[ $RUN_UNIT_TESTS == "false" && $RUN_UI_TESTS == "false" ]]; then
     log_error "No test targets available to run"
     log_info "Create test targets in your project.yml configuration"
     exit 1
@@ -212,7 +211,7 @@ check_test_targets() {
 check_project_file() {
   local xcodeproj_path="${PROJECT_NAME}.xcodeproj"
 
-  if [[ ! -d "$xcodeproj_path" ]]; then
+  if [[ ! -d $xcodeproj_path ]]; then
     log_error "Xcode project not found: $xcodeproj_path"
     log_info "Generate it with: xcodegen"
     exit 1

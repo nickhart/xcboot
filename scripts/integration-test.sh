@@ -90,23 +90,23 @@ EOF
 parse_arguments() {
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --keep-artifacts)
-        KEEP_ARTIFACTS=true
-        shift
-        ;;
-      --verbose)
-        VERBOSE=true
-        shift
-        ;;
-      --help|-h)
-        show_usage
-        exit 0
-        ;;
-      *)
-        log_error "Unknown option: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
+    --keep-artifacts)
+      KEEP_ARTIFACTS=true
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    --help | -h)
+      show_usage
+      exit 0
+      ;;
+    *)
+      log_error "Unknown option: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
     esac
   done
 }
@@ -116,7 +116,7 @@ safety_check() {
   local current_dir
   current_dir=$(pwd)
 
-  if [[ "$current_dir" == "$XCBOOT_ROOT"* ]] && [[ "$current_dir" != "$XCBOOT_ROOT" ]]; then
+  if [[ $current_dir == "$XCBOOT_ROOT"* ]] && [[ $current_dir != "$XCBOOT_ROOT" ]]; then
     log_error "Safety check failed: Running from inside xcboot subdirectory"
     log_error "Current: $current_dir"
     log_error "xcboot: $XCBOOT_ROOT"
@@ -142,7 +142,7 @@ create_mock_project() {
   mkdir -p "${project_name}.xcodeproj"
 
   # Create minimal project.pbxproj
-  cat > "${project_name}.xcodeproj/project.pbxproj" <<'PBXPROJ'
+  cat >"${project_name}.xcodeproj/project.pbxproj" <<'PBXPROJ'
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
@@ -177,22 +177,22 @@ init_git_repo() {
   git config user.name "Test User"
 
   case "$provider" in
-    github)
-      git remote add origin https://github.com/test/test.git
-      ;;
-    gitlab)
-      git remote add origin https://gitlab.com/test/test.git
-      ;;
-    bitbucket)
-      git remote add origin https://bitbucket.org/test/test.git
-      ;;
-    none)
-      # No remote
-      ;;
-    *)
-      log_error "Unknown provider: $provider"
-      return 1
-      ;;
+  github)
+    git remote add origin https://github.com/test/test.git
+    ;;
+  gitlab)
+    git remote add origin https://gitlab.com/test/test.git
+    ;;
+  bitbucket)
+    git remote add origin https://bitbucket.org/test/test.git
+    ;;
+  none)
+    # No remote
+    ;;
+  *)
+    log_error "Unknown provider: $provider"
+    return 1
+    ;;
   esac
 
   log_debug "Initialized git repo with provider: $provider"
@@ -209,9 +209,9 @@ run_bootstrap() {
 
   # Run bootstrap in non-interactive mode (pipe empty input)
   if $VERBOSE; then
-    echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" $flags
+    echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" "$flags"
   else
-    echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" $flags >/dev/null 2>&1
+    echo "" | bash "$XCBOOT_ROOT/bootstrap.sh" "$flags" >/dev/null 2>&1
   fi
 
   # Unset local path
@@ -223,7 +223,7 @@ verify_file_exists() {
   local file="$1"
   local description="${2:-$file}"
 
-  if [[ ! -f "$file" ]]; then
+  if [[ ! -f $file ]]; then
     log_error "Missing file: $description"
     log_error "  Expected: $file"
     return 1
@@ -238,7 +238,7 @@ verify_dir_exists() {
   local dir="$1"
   local description="${2:-$dir}"
 
-  if [[ ! -d "$dir" ]]; then
+  if [[ ! -d $dir ]]; then
     log_error "Missing directory: $description"
     log_error "  Expected: $dir"
     return 1
@@ -253,7 +253,7 @@ verify_executable() {
   local script="$1"
   local description="${2:-$script}"
 
-  if [[ ! -x "$script" ]]; then
+  if [[ ! -x $script ]]; then
     log_error "Not executable: $description"
     log_error "  File: $script"
     return 1
@@ -489,7 +489,7 @@ test_force_flag() {
   run_bootstrap
 
   # Modify a file
-  echo "# Modified" >> scripts/build.sh
+  echo "# Modified" >>scripts/build.sh
 
   # Run again with --force
   run_bootstrap "--force"
@@ -560,7 +560,7 @@ test_no_git_repo() {
 
 # Cleanup test directory
 cleanup() {
-  if [[ -d "$TEST_ROOT" ]]; then
+  if [[ -d $TEST_ROOT ]]; then
     if $KEEP_ARTIFACTS; then
       log_info "Keeping test artifacts: $TEST_ROOT"
     else
@@ -624,7 +624,6 @@ EOF
 
   # Summary
   echo "========================================="
-  local passed=$((total - failed))
 
   if [[ $failed -eq 0 ]]; then
     log_success "All $total tests passed! 🎉"

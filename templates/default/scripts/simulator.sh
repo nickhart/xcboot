@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091,SC2001,SC2181,SC2162,SC2016  # Style preferences acceptable here
 set -euo pipefail
 
 # Enhanced simulator management script for xcboot projects
@@ -86,7 +87,7 @@ EOF
 # Get deployment target from project.yml if available
 get_project_deployment_target() {
   local project_yml="$ROOT_DIR/project.yml"
-  if [[ -f "$project_yml" ]] && command_exists yq; then
+  if [[ -f $project_yml ]] && command_exists yq; then
     yq eval '.options.deploymentTarget.iOS' "$project_yml" 2>/dev/null | grep -v "null" || echo ""
   else
     echo ""
@@ -98,12 +99,12 @@ get_available_os_versions_for_device() {
   local device_name="$1"
 
   # Get all available simulators for this device and extract OS versions
-  xcrun simctl list devices --json 2>/dev/null | \
-    jq -r ".devices | to_entries[] | .key as \$runtime | .value[] | select(.name == \"$device_name\" and .isAvailable == true) | \$runtime" 2>/dev/null | \
-    sed 's/.*iOS-//' | \
-    sed 's/com\.apple\.CoreSimulator\.SimRuntime\.iOS-//' | \
-    sort -V | \
-    uniq
+  xcrun simctl list devices --json 2>/dev/null \
+    | jq -r ".devices | to_entries[] | .key as \$runtime | .value[] | select(.name == \"$device_name\" and .isAvailable == true) | \$runtime" 2>/dev/null \
+    | sed 's/.*iOS-//' \
+    | sed 's/com\.apple\.CoreSimulator\.SimRuntime\.iOS-//' \
+    | sort -V \
+    | uniq
 }
 
 # Detect optimal OS version for a device based on what's actually available
@@ -114,7 +115,7 @@ get_optimal_os_version() {
   local available_versions
   available_versions=$(get_available_os_versions_for_device "$device_name")
 
-  if [[ -z "$available_versions" ]]; then
+  if [[ -z $available_versions ]]; then
     log_error "No available simulators found for device: $device_name"
     return 1
   fi
@@ -127,7 +128,7 @@ get_optimal_os_version() {
   local deployment_target
   deployment_target=$(get_project_deployment_target)
 
-  if [[ -n "$deployment_target" ]]; then
+  if [[ -n $deployment_target ]]; then
     # Convert deployment target to hyphen format
     local deployment_target_hyphen
     deployment_target_hyphen=$(echo "$deployment_target" | tr '.' '-')
@@ -148,9 +149,9 @@ get_optimal_os_version() {
 # Detect Mac architecture for simulator
 detect_mac_architecture() {
   case "$(uname -m)" in
-    arm64) echo "arm64" ;;
-    x86_64) echo "x86_64" ;;
-    *) echo "arm64" ;; # Default to Apple Silicon
+  arm64) echo "arm64" ;;
+  x86_64) echo "x86_64" ;;
+  *) echo "arm64" ;; # Default to Apple Silicon
   esac
 }
 
@@ -162,7 +163,7 @@ validate_device_name() {
   local available_versions
   available_versions=$(get_available_os_versions_for_device "$device_name")
 
-  if [[ -n "$available_versions" ]]; then
+  if [[ -n $available_versions ]]; then
     return 0
   else
     return 1
@@ -178,7 +179,7 @@ validate_device_os_combination() {
   local available_versions
   available_versions=$(get_available_os_versions_for_device "$device_name")
 
-  if [[ -z "$available_versions" ]]; then
+  if [[ -z $available_versions ]]; then
     return 1
   fi
 
@@ -198,11 +199,11 @@ show_device_suggestions() {
 
   # Get unique device names that have available simulators
   local available_devices
-  available_devices=$(xcrun simctl list devices --json 2>/dev/null | \
-    jq -r '.devices | to_entries[] | .value[] | select(.isAvailable == true and (.name | contains("'"$family"'"))) | .name' 2>/dev/null | \
-    sort -u | head -15)
+  available_devices=$(xcrun simctl list devices --json 2>/dev/null \
+    | jq -r '.devices | to_entries[] | .value[] | select(.isAvailable == true and (.name | contains("'"$family"'"))) | .name' 2>/dev/null \
+    | sort -u | head -15)
 
-  if [[ -n "$available_devices" ]]; then
+  if [[ -n $available_devices ]]; then
     echo "$available_devices" | sed 's/^/  • /'
   else
     log_warning "No $family simulators found on this system"
@@ -212,7 +213,7 @@ show_device_suggestions() {
 
 # Update .xcboot.yml configuration
 update_simulator_config() {
-  local config_type="$1"  # "tests" or "ui-tests"
+  local config_type="$1" # "tests" or "ui-tests"
   local device_name="$2"
   local os_version="$3"
   local architecture="$4"
@@ -221,9 +222,9 @@ update_simulator_config() {
   local config_file="$ROOT_DIR/.xcboot.yml"
 
   # Create .xcboot.yml if it doesn't exist (user overrides file)
-  if [[ ! -f "$config_file" ]]; then
+  if [[ ! -f $config_file ]]; then
     log_info "Creating .xcboot.yml configuration file..."
-    cat > "$config_file" <<EOF
+    cat >"$config_file" <<EOF
 # xcboot user configuration overrides
 # This file overrides settings from .xcboot/config.yml
 # It is gitignored and safe for local customization
@@ -260,13 +261,13 @@ EOF
   current_arch=$(yq eval ".simulators.$config_type.arch" "$config_file" 2>/dev/null || echo "")
 
   # Check if update is needed
-  if [[ "$current_device" == "$device_name" && "$current_os" == "$os_version" && "$current_arch" == "$architecture" ]]; then
+  if [[ $current_device == "$device_name" && $current_os == "$os_version" && $current_arch == "$architecture" ]]; then
     log_success "Configuration already up to date for $config_type"
     return
   fi
 
   # Prompt for confirmation unless force or yes is specified
-  if [[ "$force_update" != "true" && "$force_update" != "yes" ]]; then
+  if [[ $force_update != "true" && $force_update != "yes" ]]; then
     echo
     log_info "Current $config_type configuration:"
     echo "  Device: $current_device"
@@ -282,11 +283,12 @@ EOF
     while true; do
       read -p "Update $config_type configuration? (y/N): " yn
       case $yn in
-        [Yy]* ) break;;
-        [Nn]* | "" )
-          log_info "Configuration update cancelled"
-          return;;
-        * ) echo "Please answer yes or no.";;
+      [Yy]*) break ;;
+      [Nn]* | "")
+        log_info "Configuration update cancelled"
+        return
+        ;;
+      *) echo "Please answer yes or no." ;;
       esac
     done
   fi
@@ -357,7 +359,7 @@ show_current_config() {
   # Show project deployment target if available
   local deployment_target
   deployment_target=$(get_project_deployment_target)
-  if [[ -n "$deployment_target" ]]; then
+  if [[ -n $deployment_target ]]; then
     echo
     echo "Project Deployment Target: iOS $deployment_target"
   fi
@@ -378,17 +380,17 @@ config_tests() {
 
     # Determine device family for suggestions
     local family=""
-    if [[ "$device_name" == *"iPhone"* ]]; then
+    if [[ $device_name == *"iPhone"* ]]; then
       family="iPhone"
-    elif [[ "$device_name" == *"iPad"* ]]; then
+    elif [[ $device_name == *"iPad"* ]]; then
       family="iPad"
     else
       # Show all available devices
       log_info "Available simulators on this system:"
-      xcrun simctl list devices --json 2>/dev/null | \
-        jq -r '.devices | to_entries[] | .value[] | select(.isAvailable == true) | .name' 2>/dev/null | \
-        sort -u | head -20 | sed 's/^/  • /' || \
-        log_warning "Could not fetch device list"
+      xcrun simctl list devices --json 2>/dev/null \
+        | jq -r '.devices | to_entries[] | .value[] | select(.isAvailable == true) | .name' 2>/dev/null \
+        | sort -u | head -20 | sed 's/^/  • /' \
+        || log_warning "Could not fetch device list"
       exit 1
     fi
 
@@ -398,7 +400,7 @@ config_tests() {
 
   # Determine OS version
   local os_version
-  if [[ -n "$os_override" ]]; then
+  if [[ -n $os_override ]]; then
     os_version="$os_override"
 
     # Validate that this device + OS combination exists
@@ -419,7 +421,7 @@ config_tests() {
 
   # Determine architecture
   local architecture
-  if [[ -n "$arch_override" ]]; then
+  if [[ -n $arch_override ]]; then
     architecture="$arch_override"
   else
     architecture=$(detect_mac_architecture)
@@ -449,16 +451,16 @@ config_ui_tests() {
 
     # Show suggestions
     local family=""
-    if [[ "$device_name" == *"iPhone"* ]]; then
+    if [[ $device_name == *"iPhone"* ]]; then
       family="iPhone"
-    elif [[ "$device_name" == *"iPad"* ]]; then
+    elif [[ $device_name == *"iPad"* ]]; then
       family="iPad"
     else
       log_info "Available simulators on this system:"
-      xcrun simctl list devices --json 2>/dev/null | \
-        jq -r '.devices | to_entries[] | .value[] | select(.isAvailable == true) | .name' 2>/dev/null | \
-        sort -u | head -20 | sed 's/^/  • /' || \
-        log_warning "Could not fetch device list"
+      xcrun simctl list devices --json 2>/dev/null \
+        | jq -r '.devices | to_entries[] | .value[] | select(.isAvailable == true) | .name' 2>/dev/null \
+        | sort -u | head -20 | sed 's/^/  • /' \
+        || log_warning "Could not fetch device list"
       exit 1
     fi
 
@@ -468,7 +470,7 @@ config_ui_tests() {
 
   # Determine OS version
   local os_version
-  if [[ -n "$os_override" ]]; then
+  if [[ -n $os_override ]]; then
     os_version="$os_override"
 
     # Validate that this device + OS combination exists
@@ -489,7 +491,7 @@ config_ui_tests() {
 
   # Determine architecture
   local architecture
-  if [[ -n "$arch_override" ]]; then
+  if [[ -n $arch_override ]]; then
     architecture="$arch_override"
   else
     architecture=$(detect_mac_architecture)
@@ -508,20 +510,20 @@ config_ui_tests() {
 show_optimal_os() {
   local device_name="${1:-}"
 
-  if [[ -z "$device_name" ]]; then
+  if [[ -z $device_name ]]; then
     # Show optimal OS for project
     local deployment_target
     deployment_target=$(get_project_deployment_target)
-    if [[ -n "$deployment_target" ]]; then
+    if [[ -n $deployment_target ]]; then
       local deployment_target_hyphen
       deployment_target_hyphen=$(echo "$deployment_target" | tr '.' '-')
       echo "Optimal OS version (based on project deployment target): iOS $deployment_target_hyphen"
     else
       echo "No project deployment target found. Latest available iOS will be used."
       local latest_ios
-      latest_ios=$(xcrun simctl list runtimes --json 2>/dev/null | \
-        jq -r '.runtimes[] | select(.name | startswith("iOS")) | .version' | \
-        sort -V | tail -1 2>/dev/null || echo "26.0")
+      latest_ios=$(xcrun simctl list runtimes --json 2>/dev/null \
+        | jq -r '.runtimes[] | select(.name | startswith("iOS")) | .version' \
+        | sort -V | tail -1 2>/dev/null || echo "26.0")
       # Convert dots to hyphens for xcrun simctl compatibility
       latest_ios_hyphenated=$(echo "$latest_ios" | tr '.' '-')
       echo "Latest available iOS: $latest_ios_hyphenated"
@@ -541,7 +543,7 @@ show_optimal_os() {
       # Show all available versions for this device
       local available_versions
       available_versions=$(get_available_os_versions_for_device "$device_name")
-      if [[ -n "$available_versions" ]]; then
+      if [[ -n $available_versions ]]; then
         echo "All available OS versions for $device_name:"
         echo "$available_versions" | sed 's/^/  • /'
       fi
@@ -568,30 +570,30 @@ list_simulators() {
   # Parse list options
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --family)
-        family_filter="$2"
-        shift 2
-        ;;
-      --device)
-        device_filter="$2"
-        shift 2
-        ;;
-      --os)
-        os_filter="$2"
-        shift 2
-        ;;
-      --available-only)
-        available_only=true
-        shift
-        ;;
-      --json)
-        json_output=true
-        shift
-        ;;
-      *)
-        echo "Unknown option: $1" >&2
-        exit 1
-        ;;
+    --family)
+      family_filter="$2"
+      shift 2
+      ;;
+    --device)
+      device_filter="$2"
+      shift 2
+      ;;
+    --os)
+      os_filter="$2"
+      shift 2
+      ;;
+    --available-only)
+      available_only=true
+      shift
+      ;;
+    --json)
+      json_output=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
     esac
   done
 
@@ -602,15 +604,15 @@ list_simulators() {
 
   local jq_filter='.devices | to_entries[] | .key as $runtime | .value[] | select(.isAvailable == true'
 
-  if [[ -n "$family_filter" ]]; then
+  if [[ -n $family_filter ]]; then
     jq_filter="$jq_filter and (.deviceTypeIdentifier | contains(\"$family_filter\"))"
   fi
 
-  if [[ -n "$device_filter" ]]; then
+  if [[ -n $device_filter ]]; then
     jq_filter="$jq_filter and (.name | contains(\"$device_filter\"))"
   fi
 
-  if [[ -n "$os_filter" ]]; then
+  if [[ -n $os_filter ]]; then
     jq_filter="$jq_filter and (\$runtime | contains(\"$os_filter\"))"
   fi
 
@@ -633,26 +635,26 @@ create_simulator() {
   # Parse create options
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --device)
-        device_type="$2"
-        shift 2
-        ;;
-      --os)
-        os_version="$2"
-        shift 2
-        ;;
-      --name)
-        sim_name="$2"
-        shift 2
-        ;;
-      *)
-        echo "Unknown option: $1" >&2
-        exit 1
-        ;;
+    --device)
+      device_type="$2"
+      shift 2
+      ;;
+    --os)
+      os_version="$2"
+      shift 2
+      ;;
+    --name)
+      sim_name="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
     esac
   done
 
-  if [[ -z "$device_type" || -z "$os_version" || -z "$sim_name" ]]; then
+  if [[ -z $device_type || -z $os_version || -z $sim_name ]]; then
     echo "Error: --device, --os, and --name are required for create command" >&2
     echo "Example: $0 create --device \"iPhone 16 Pro\" --os 26-0 --name \"My Test Device\""
     exit 1
@@ -662,7 +664,7 @@ create_simulator() {
   local device_id
   device_id=$(xcrun simctl list devicetypes --json | jq -r ".devicetypes[] | select(.name == \"$device_type\") | .identifier")
 
-  if [[ -z "$device_id" ]]; then
+  if [[ -z $device_id ]]; then
     echo "Error: Device type '$device_type' not found" >&2
     echo "Available device types:"
     xcrun simctl list devicetypes --json | jq -r '.devicetypes[].name' | sort
@@ -673,7 +675,7 @@ create_simulator() {
   local runtime_id
   runtime_id=$(xcrun simctl list runtimes --json | jq -r ".runtimes[] | select(.version == \"$os_version\" and .name | startswith(\"iOS\")) | .identifier")
 
-  if [[ -z "$runtime_id" ]]; then
+  if [[ -z $runtime_id ]]; then
     echo "Error: iOS runtime version '$os_version' not found" >&2
     echo "Available iOS runtimes:"
     xcrun simctl list runtimes --json | jq -r '.runtimes[] | select(.name | startswith("iOS")) | .version' | sort
@@ -699,7 +701,7 @@ find_simulator() {
   local udid
   udid=$(xcrun simctl list devices --json | jq -r ".devices[][] | select(.name == \"$identifier\") | .udid" | head -n1)
 
-  if [[ -n "$udid" ]]; then
+  if [[ -n $udid ]]; then
     echo "$udid"
     return
   fi
@@ -754,7 +756,7 @@ install_app() {
   local udid
   udid=$(find_simulator "$identifier")
 
-  if [[ ! -e "$app_path" ]]; then
+  if [[ ! -e $app_path ]]; then
     echo "Error: App path '$app_path' does not exist" >&2
     exit 1
   fi
@@ -771,141 +773,141 @@ if [[ $# -eq 0 ]]; then
 fi
 
 case "$1" in
-  list)
-    shift
-    list_simulators "$@"
-    ;;
-  create)
-    shift
-    create_simulator "$@"
-    ;;
-  boot)
-    if [[ $# -ne 2 ]]; then
-      echo "Usage: $0 boot <udid_or_name>" >&2
-      exit 1
-    fi
-    boot_simulator "$2"
-    ;;
-  shutdown)
-    if [[ $# -ne 2 ]]; then
-      echo "Usage: $0 shutdown <udid_or_name>" >&2
-      exit 1
-    fi
-    shutdown_simulator "$2"
-    ;;
-  erase)
-    if [[ $# -ne 2 ]]; then
-      echo "Usage: $0 erase <udid_or_name>" >&2
-      exit 1
-    fi
-    erase_simulator "$2"
-    ;;
-  delete)
-    if [[ $# -ne 2 ]]; then
-      echo "Usage: $0 delete <udid_or_name>" >&2
-      exit 1
-    fi
-    delete_simulator "$2"
-    ;;
-  install)
-    if [[ $# -ne 3 ]]; then
-      echo "Usage: $0 install <udid_or_name> <app_path>" >&2
-      exit 1
-    fi
-    install_app "$2" "$3"
-    ;;
-  config-tests)
-    if [[ $# -lt 2 ]]; then
-      echo "Usage: $0 config-tests <device_name> [--os <version>] [--arch <arch>] [--force|--yes]" >&2
-      exit 1
-    fi
-
-    device_name="$2"
-    shift 2
-
-    os_override=""
-    arch_override=""
-    force_update="false"
-
-    while [[ $# -gt 0 ]]; do
-      case $1 in
-        --os)
-          os_override="$2"
-          shift 2
-          ;;
-        --arch)
-          arch_override="$2"
-          shift 2
-          ;;
-        --force)
-          force_update="true"
-          shift
-          ;;
-        --yes)
-          force_update="yes"
-          shift
-          ;;
-        *)
-          echo "Unknown option: $1" >&2
-          exit 1
-          ;;
-      esac
-    done
-
-    config_tests "$device_name" "$os_override" "$arch_override" "$force_update"
-    ;;
-  config-ui-tests)
-    if [[ $# -lt 2 ]]; then
-      echo "Usage: $0 config-ui-tests <device_name> [--os <version>] [--arch <arch>] [--force|--yes]" >&2
-      exit 1
-    fi
-
-    device_name="$2"
-    shift 2
-
-    os_override=""
-    arch_override=""
-    force_update="false"
-
-    while [[ $# -gt 0 ]]; do
-      case $1 in
-        --os)
-          os_override="$2"
-          shift 2
-          ;;
-        --arch)
-          arch_override="$2"
-          shift 2
-          ;;
-        --force)
-          force_update="true"
-          shift
-          ;;
-        --yes)
-          force_update="yes"
-          shift
-          ;;
-        *)
-          echo "Unknown option: $1" >&2
-          exit 1
-          ;;
-      esac
-    done
-
-    config_ui_tests "$device_name" "$os_override" "$arch_override" "$force_update"
-    ;;
-  show-config)
-    show_current_config
-    ;;
-  optimal-os)
-    show_optimal_os "${2:-}"
-    ;;
-  help|--help|-h)
-    show_help
-    ;;
-  *)
-    echo "Unknown command: $1" >&2
-    echo "Use '$0 help' for usage information" >&2
+list)
+  shift
+  list_simulators "$@"
+  ;;
+create)
+  shift
+  create_simulator "$@"
+  ;;
+boot)
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: $0 boot <udid_or_name>" >&2
     exit 1
-    ;;
+  fi
+  boot_simulator "$2"
+  ;;
+shutdown)
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: $0 shutdown <udid_or_name>" >&2
+    exit 1
+  fi
+  shutdown_simulator "$2"
+  ;;
+erase)
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: $0 erase <udid_or_name>" >&2
+    exit 1
+  fi
+  erase_simulator "$2"
+  ;;
+delete)
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: $0 delete <udid_or_name>" >&2
+    exit 1
+  fi
+  delete_simulator "$2"
+  ;;
+install)
+  if [[ $# -ne 3 ]]; then
+    echo "Usage: $0 install <udid_or_name> <app_path>" >&2
+    exit 1
+  fi
+  install_app "$2" "$3"
+  ;;
+config-tests)
+  if [[ $# -lt 2 ]]; then
+    echo "Usage: $0 config-tests <device_name> [--os <version>] [--arch <arch>] [--force|--yes]" >&2
+    exit 1
+  fi
+
+  device_name="$2"
+  shift 2
+
+  os_override=""
+  arch_override=""
+  force_update="false"
+
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+    --os)
+      os_override="$2"
+      shift 2
+      ;;
+    --arch)
+      arch_override="$2"
+      shift 2
+      ;;
+    --force)
+      force_update="true"
+      shift
+      ;;
+    --yes)
+      force_update="yes"
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+    esac
+  done
+
+  config_tests "$device_name" "$os_override" "$arch_override" "$force_update"
+  ;;
+config-ui-tests)
+  if [[ $# -lt 2 ]]; then
+    echo "Usage: $0 config-ui-tests <device_name> [--os <version>] [--arch <arch>] [--force|--yes]" >&2
+    exit 1
+  fi
+
+  device_name="$2"
+  shift 2
+
+  os_override=""
+  arch_override=""
+  force_update="false"
+
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+    --os)
+      os_override="$2"
+      shift 2
+      ;;
+    --arch)
+      arch_override="$2"
+      shift 2
+      ;;
+    --force)
+      force_update="true"
+      shift
+      ;;
+    --yes)
+      force_update="yes"
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+    esac
+  done
+
+  config_ui_tests "$device_name" "$os_override" "$arch_override" "$force_update"
+  ;;
+show-config)
+  show_current_config
+  ;;
+optimal-os)
+  show_optimal_os "${2:-}"
+  ;;
+help | --help | -h)
+  show_help
+  ;;
+*)
+  echo "Unknown command: $1" >&2
+  echo "Use '$0 help' for usage information" >&2
+  exit 1
+  ;;
 esac

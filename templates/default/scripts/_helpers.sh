@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Shared helper functions for SwiftProjectTemplate scripts
 
+# shellcheck disable=SC1091,SC2001,SC2005,SC2155,SC2162  # Style preferences acceptable
 # Colors for output
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
@@ -46,17 +47,17 @@ get_project_root() {
 
 # Check if file exists and is not empty
 file_exists_and_not_empty() {
-  [[ -f "$1" && -s "$1" ]]
+  [[ -f $1 && -s $1 ]]
 }
 
 # Validate project name (alphanumeric, no spaces, valid Swift identifier)
 validate_project_name() {
   local name="$1"
-  if [[ -z "$name" ]]; then
+  if [[ -z $name ]]; then
     return 1
   fi
   # Check if it starts with a letter and contains only alphanumeric characters
-  if [[ ! "$name" =~ ^[A-Za-z][A-Za-z0-9]*$ ]]; then
+  if [[ ! $name =~ ^[A-Za-z][A-Za-z0-9]*$ ]]; then
     return 1
   fi
   return 0
@@ -65,7 +66,7 @@ validate_project_name() {
 # Validate iOS version format (e.g., 16.0, 17.5, 18.1)
 validate_ios_version() {
   local version="$1"
-  if [[ ! "$version" =~ ^[0-9]+\.[0-9]+$ ]]; then
+  if [[ ! $version =~ ^[0-9]+\.[0-9]+$ ]]; then
     return 1
   fi
   return 0
@@ -74,7 +75,7 @@ validate_ios_version() {
 # Validate Swift version format (e.g., 5.9, 5.10, 6.0)
 validate_swift_version() {
   local version="$1"
-  if [[ ! "$version" =~ ^[0-9]+\.[0-9]+$ ]]; then
+  if [[ ! $version =~ ^[0-9]+\.[0-9]+$ ]]; then
     return 1
   fi
   return 0
@@ -83,11 +84,11 @@ validate_swift_version() {
 # Validate bundle ID root format (e.g., com.yourname, com.company.team)
 validate_bundle_id_root() {
   local bundle_id="$1"
-  if [[ -z "$bundle_id" ]]; then
+  if [[ -z $bundle_id ]]; then
     return 1
   fi
   # Check if it follows reverse domain notation (at least one dot, alphanumeric + dots + hyphens)
-  if [[ ! "$bundle_id" =~ ^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$ ]]; then
+  if [[ ! $bundle_id =~ ^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$ ]]; then
     return 1
   fi
   return 0
@@ -99,23 +100,23 @@ replace_template_vars() {
   local input_file="$1"
   local output_file="$2"
   shift 2
-  
+
   local temp_file
   temp_file=$(mktemp)
   cp "$input_file" "$temp_file"
-  
+
   for var_assignment in "$@"; do
     local var_name="${var_assignment%=*}"
     local var_value="${var_assignment#*=}"
-    
+
     # Use a different delimiter for sed to avoid issues with forward slashes
     # Also escape any ampersands and backslashes in the replacement text
     var_value=$(echo "$var_value" | sed 's/\\/\\\\/g; s/&/\\&/g')
-    
+
     # Use | as delimiter instead of / to avoid URL conflicts
     sed -i.bak "s|{{${var_name}}}|${var_value}|g" "$temp_file"
   done
-  
+
   mv "$temp_file" "$output_file"
   rm -f "${temp_file}.bak"
 }
@@ -141,18 +142,18 @@ get_available_simulators() {
 # Check if required tools are installed
 check_required_tools() {
   local missing_tools=()
-  
+
   for tool in "$@"; do
     if ! command_exists "$tool"; then
       missing_tools+=("$tool")
     fi
   done
-  
+
   if [[ ${#missing_tools[@]} -gt 0 ]]; then
     log_error "Missing required tools: ${missing_tools[*]}"
     log_info "Run 'brew bundle install' to install missing dependencies"
     return 1
   fi
-  
+
   return 0
 }

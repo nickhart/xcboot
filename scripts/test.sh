@@ -4,6 +4,8 @@ set -euo pipefail
 # Test script for xcboot development
 # Tests the bootstrap process and validates xcboot functionality
 
+# shellcheck disable=SC2329  # log_warning unused but kept for consistency
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -22,6 +24,7 @@ log_success() {
   echo -e "${GREEN}SUCCESS:${NC} $*"
 }
 
+# shellcheck disable=SC2329  # log_warning unused but kept for consistency
 log_warning() {
   echo -e "${YELLOW}WARNING:${NC} $*"
 }
@@ -61,7 +64,7 @@ test_file_structure() {
   local missing_files=()
 
   for file in "${required_files[@]}"; do
-    if [[ ! -f "$file" ]]; then
+    if [[ ! -f $file ]]; then
       missing_files+=("$file")
     fi
   done
@@ -96,7 +99,7 @@ test_script_permissions() {
   local non_executable=()
 
   for script in "${scripts[@]}"; do
-    if [[ ! -x "$script" ]]; then
+    if [[ ! -x $script ]]; then
       non_executable+=("$script")
     fi
   done
@@ -138,7 +141,7 @@ test_version_file() {
   local version
   version=$(cat VERSION)
 
-  if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     log_error "Invalid version format: $version (expected semver: X.Y.Z)"
     return 1
   fi
@@ -163,7 +166,7 @@ test_ci_configs() {
   local missing=()
 
   for file in "${ci_files[@]}"; do
-    if [[ ! -f "$file" ]]; then
+    if [[ ! -f $file ]]; then
       missing+=("$file")
     fi
   done

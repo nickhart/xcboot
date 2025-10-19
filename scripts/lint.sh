@@ -10,7 +10,6 @@ cd "$ROOT_DIR"
 # Colors
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m'
 
@@ -39,7 +38,7 @@ echo
 # Find all .sh files
 all_scripts=$(find . -type f -name "*.sh" -not -path "./.git/*" -not -path "./build/*")
 
-if [[ -z "$all_scripts" ]]; then
+if [[ -z $all_scripts ]]; then
   log_error "No shell scripts found"
   exit 1
 fi
@@ -61,7 +60,7 @@ while IFS= read -r script; do
     failed=$((failed + 1))
     failed_files+=("$script")
   fi
-done <<< "$all_scripts"
+done <<<"$all_scripts"
 
 echo
 echo "========================================="

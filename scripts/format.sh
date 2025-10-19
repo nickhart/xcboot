@@ -36,12 +36,12 @@ FIX=false
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --fix)
-      FIX=true
-      shift
-      ;;
-    --help|-h)
-      cat <<EOF
+  --fix)
+    FIX=true
+    shift
+    ;;
+  --help | -h)
+    cat <<EOF
 Format Script for xcboot
 
 Runs shfmt to check or fix shell script formatting.
@@ -58,13 +58,13 @@ EXAMPLES:
   $0 --fix     # Fix formatting issues
 
 EOF
-      exit 0
-      ;;
-    *)
-      log_error "Unknown option: $1"
-      echo "Use '$0 --help' for usage information"
-      exit 1
-      ;;
+    exit 0
+    ;;
+  *)
+    log_error "Unknown option: $1"
+    echo "Use '$0 --help' for usage information"
+    exit 1
+    ;;
   esac
 done
 
@@ -78,7 +78,7 @@ fi
 # Find all .sh files
 all_scripts=$(find . -type f -name "*.sh" -not -path "./.git/*" -not -path "./build/*")
 
-if [[ -z "$all_scripts" ]]; then
+if [[ -z $all_scripts ]]; then
   log_error "No shell scripts found"
   exit 1
 fi

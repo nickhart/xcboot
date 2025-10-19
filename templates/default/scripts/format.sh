@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091,SC2001,SC2005,SC2155,SC2162  # Style preferences acceptable
 set -euo pipefail
 
 # SwiftFormat script for xcboot projects
@@ -11,7 +12,6 @@ cd "$ROOT_DIR"
 source "$(dirname "${BASH_SOURCE[0]}")/_helpers.sh"
 
 # Default values
-FIX_ISSUES=false
 CHECK_ONLY=true
 VERBOSE=false
 
@@ -43,29 +43,28 @@ EOF
 parse_arguments() {
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --fix)
-        FIX_ISSUES=true
-        CHECK_ONLY=false
-        shift
-        ;;
-      --verbose)
-        VERBOSE=true
-        shift
-        ;;
-      --help|-h)
-        show_help
-        exit 0
-        ;;
-      -*)
-        log_error "Unknown option: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
-      *)
-        log_error "Unexpected argument: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
+    --fix)
+      CHECK_ONLY=false
+      shift
+      ;;
+    --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    --help | -h)
+      show_help
+      exit 0
+      ;;
+    -*)
+      log_error "Unknown option: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
+    *)
+      log_error "Unexpected argument: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
     esac
   done
 }
@@ -73,7 +72,7 @@ parse_arguments() {
 check_swiftformat_config() {
   local config_file=".swiftformat"
 
-  if [[ ! -f "$config_file" ]]; then
+  if [[ ! -f $config_file ]]; then
     log_warning "SwiftFormat configuration not found: $config_file"
     log_info "Using SwiftFormat default settings"
     return
@@ -85,13 +84,13 @@ check_swiftformat_config() {
 get_source_directories() {
   local source_dirs=()
 
-  if [[ -f "project.yml" ]] && command_exists yq ; then
+  if [[ -f "project.yml" ]] && command_exists yq; then
     local project_name
     project_name=$(yq eval '.name' project.yml 2>/dev/null || echo "")
 
-    if [[ -n "$project_name" && "$project_name" != "null" ]]; then
+    if [[ -n $project_name && $project_name != "null" ]]; then
       # Add main source directory if it exists
-      if [[ -d "$project_name" ]]; then
+      if [[ -d $project_name ]]; then
         source_dirs+=("$project_name")
       fi
 
@@ -109,7 +108,7 @@ get_source_directories() {
   # Fallback: look for common Swift source directories
   if [[ ${#source_dirs[@]} -eq 0 ]]; then
     for dir in Sources App Tests; do
-      if [[ -d "$dir" ]]; then
+      if [[ -d $dir ]]; then
         source_dirs+=("$dir")
       fi
     done
@@ -125,7 +124,7 @@ get_source_directories() {
 
 run_swiftformat() {
   local source_dirs
-  read -a source_dirs <<< "$(get_source_directories)"
+  read -a source_dirs <<<"$(get_source_directories)"
 
   log_info "SwiftFormat directories: ${source_dirs[*]}"
 

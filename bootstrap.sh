@@ -46,37 +46,39 @@ log_step() {
 FORCE_INSTALL=false
 TEMPLATE="default"
 GENERATE_STATUS=true
+# shellcheck disable=SC2034  # Reserved for future MVVM structure generation (v0.2.0)
 CREATE_STRUCTURE=false
 
 # Parse arguments
 parse_arguments() {
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --force)
-        FORCE_INSTALL=true
-        shift
-        ;;
-      --template)
-        TEMPLATE="$2"
-        shift 2
-        ;;
-      --no-status)
-        GENERATE_STATUS=false
-        shift
-        ;;
-      --structure)
-        CREATE_STRUCTURE=true
-        shift
-        ;;
-      --help|-h)
-        show_help
-        exit 0
-        ;;
-      *)
-        log_error "Unknown option: $1"
-        echo "Use '$0 --help' for usage information"
-        exit 1
-        ;;
+    --force)
+      FORCE_INSTALL=true
+      shift
+      ;;
+    --template)
+      TEMPLATE="$2"
+      shift 2
+      ;;
+    --no-status)
+      GENERATE_STATUS=false
+      shift
+      ;;
+    --structure)
+      # shellcheck disable=SC2034  # Reserved for future use
+      CREATE_STRUCTURE=true
+      shift
+      ;;
+    --help | -h)
+      show_help
+      exit 0
+      ;;
+    *)
+      log_error "Unknown option: $1"
+      echo "Use '$0 --help' for usage information"
+      exit 1
+      ;;
     esac
   done
 }
@@ -162,10 +164,10 @@ detect_git_provider() {
   remote_url=$(git remote get-url origin 2>/dev/null || echo "")
 
   case "$remote_url" in
-    *github.com*)    echo "github" ;;
-    *gitlab.com*)    echo "gitlab" ;;
-    *bitbucket.*)    echo "bitbucket" ;;
-    *)               echo "github" ;;  # Default to GitHub
+  *github.com*) echo "github" ;;
+  *gitlab.com*) echo "gitlab" ;;
+  *bitbucket.*) echo "bitbucket" ;;
+  *) echo "github" ;; # Default to GitHub
   esac
 }
 
@@ -174,7 +176,7 @@ detect_project_name() {
   local xcodeproj
   xcodeproj=$(find . -maxdepth 1 -name "*.xcodeproj" -type d | head -1)
 
-  if [[ -n "$xcodeproj" ]]; then
+  if [[ -n $xcodeproj ]]; then
     basename "$xcodeproj" .xcodeproj
     return 0
   fi
@@ -195,17 +197,17 @@ detect_project_name() {
 detect_deployment_target() {
   local xcodeproj="$1"
 
-  if [[ -z "$xcodeproj" ]] || [[ ! -d "$xcodeproj" ]]; then
-    echo "18.0"  # Default
+  if [[ -z $xcodeproj ]] || [[ ! -d $xcodeproj ]]; then
+    echo "18.0" # Default
     return
   fi
 
   # Try to extract from project.pbxproj
   local pbxproj="$xcodeproj/project.pbxproj"
-  if [[ -f "$pbxproj" ]]; then
+  if [[ -f $pbxproj ]]; then
     local target
     target=$(grep -m 1 "IPHONEOS_DEPLOYMENT_TARGET" "$pbxproj" | sed 's/.*= \(.*\);/\1/' | tr -d ' "' || echo "")
-    if [[ -n "$target" ]]; then
+    if [[ -n $target ]]; then
       echo "$target"
       return
     fi
@@ -215,13 +217,13 @@ detect_deployment_target() {
   if [[ -f "project.yml" ]] && command_exists yq; then
     local yml_target
     yml_target=$(yq eval '.options.deploymentTarget.iOS' project.yml 2>/dev/null || echo "")
-    if [[ -n "$yml_target" && "$yml_target" != "null" ]]; then
+    if [[ -n $yml_target && $yml_target != "null" ]]; then
       echo "$yml_target"
       return
     fi
   fi
 
-  echo "18.0"  # Default
+  echo "18.0" # Default
 }
 
 # Detect Swift version
@@ -229,16 +231,16 @@ detect_swift_version() {
   if command_exists swift; then
     swift --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -1 || echo "6.2"
   else
-    echo "6.2"  # Default
+    echo "6.2" # Default
   fi
 }
 
 # Detect Mac architecture for simulators
 detect_mac_architecture() {
   case "$(uname -m)" in
-    arm64) echo "arm64" ;;
-    x86_64) echo "x86_64" ;;
-    *) echo "arm64" ;; # Default to Apple Silicon
+  arm64) echo "arm64" ;;
+  x86_64) echo "x86_64" ;;
+  *) echo "arm64" ;; # Default to Apple Silicon
   esac
 }
 
@@ -249,18 +251,18 @@ detect_optimal_simulator() {
 
   # Default simulators based on iOS version
   case "$major_version" in
-    18)
-      echo "iPhone 16 Pro|18-0"
-      ;;
-    17)
-      echo "iPhone 15 Pro|17-5"
-      ;;
-    16)
-      echo "iPhone 15 Pro|16-4"
-      ;;
-    *)
-      echo "iPhone 16 Pro|18-0"
-      ;;
+  18)
+    echo "iPhone 16 Pro|18-0"
+    ;;
+  17)
+    echo "iPhone 15 Pro|17-5"
+    ;;
+  16)
+    echo "iPhone 15 Pro|16-4"
+    ;;
+  *)
+    echo "iPhone 16 Pro|18-0"
+    ;;
   esac
 }
 
@@ -286,7 +288,8 @@ prompt_bundle_id() {
   if [[ -f "$xcodeproj/project.pbxproj" ]]; then
     local detected
     detected=$(grep -m 1 "PRODUCT_BUNDLE_IDENTIFIER" "$xcodeproj/project.pbxproj" | sed 's/.*= \(.*\);/\1/' | tr -d ' "' | sed 's/\.[^.]*$//' || echo "")
-    if [[ -n "$detected" && "$detected" != "\$(PRODUCT_BUNDLE_IDENTIFIER)" ]]; then
+    # shellcheck disable=SC2016  # Intentional literal string comparison
+    if [[ -n $detected && $detected != '$(PRODUCT_BUNDLE_IDENTIFIER)' ]]; then
       default_bundle_id="$detected"
     fi
   fi
@@ -300,7 +303,7 @@ prompt_bundle_id() {
   echo -n "Enter bundle ID root [$default_bundle_id]: "
   read -r bundle_id
 
-  if [[ -z "$bundle_id" ]]; then
+  if [[ -z $bundle_id ]]; then
     echo "$default_bundle_id"
   else
     echo "$bundle_id"
@@ -313,9 +316,9 @@ download_file() {
   local file_path="$2"
 
   # Support local testing mode via XCBOOT_LOCAL_PATH environment variable
-  if [[ -n "${XCBOOT_LOCAL_PATH:-}" ]]; then
+  if [[ -n ${XCBOOT_LOCAL_PATH:-} ]]; then
     local local_file="${XCBOOT_LOCAL_PATH}/templates/${template}/${file_path}"
-    if [[ -f "$local_file" ]]; then
+    if [[ -f $local_file ]]; then
       cat "$local_file"
       return 0
     else
@@ -381,7 +384,7 @@ install_file() {
   local sim_arch="${11}"
 
   # Check if file exists and force flag
-  if [[ -f "$dest_path" ]] && [[ "$FORCE_INSTALL" != "true" ]]; then
+  if [[ -f $dest_path ]] && [[ $FORCE_INSTALL != "true" ]]; then
     log_warning "File exists, skipping: $dest_path (use --force to overwrite)"
     return 0
   fi
@@ -389,7 +392,7 @@ install_file() {
   # Create parent directory if needed
   local parent_dir
   parent_dir=$(dirname "$dest_path")
-  if [[ ! -d "$parent_dir" ]]; then
+  if [[ ! -d $parent_dir ]]; then
     mkdir -p "$parent_dir"
   fi
 
@@ -401,7 +404,7 @@ install_file() {
   content=$(replace_variables "$content" "$project_name" "$bundle_id_root" "$deployment_target" "$swift_version" "$ci_provider" "$sim_device" "$sim_os" "$sim_arch")
 
   # Write file
-  echo "$content" > "$dest_path"
+  echo "$content" >"$dest_path"
 
   log_success "Installed: $dest_path"
 }
@@ -460,25 +463,25 @@ install_ci_config() {
   log_step "Installing CI configuration for $provider..."
 
   case "$provider" in
-    github)
-      mkdir -p .github/workflows
-      install_file "$template" "ci/github/workflows/ci.yml" ".github/workflows/ci.yml" "${vars[@]}"
-      install_file "$template" "ci/github/pull_request_template.md" ".github/pull_request_template.md" "${vars[@]}"
-      ;;
-    gitlab)
-      install_file "$template" "ci/gitlab/.gitlab-ci.yml" ".gitlab-ci.yml" "${vars[@]}"
-      mkdir -p .gitlab/merge_request_templates
-      install_file "$template" "ci/gitlab/merge_request_templates/default.md" ".gitlab/merge_request_templates/default.md" "${vars[@]}"
-      log_warning "GitLab CI support is experimental"
-      ;;
-    bitbucket)
-      install_file "$template" "ci/bitbucket/bitbucket-pipelines.yml" "bitbucket-pipelines.yml" "${vars[@]}"
-      install_file "$template" "ci/bitbucket/pull_request_template.md" "pull_request_template.md" "${vars[@]}"
-      log_warning "Bitbucket Pipelines support is experimental"
-      ;;
-    *)
-      log_warning "No CI provider detected, skipping CI configuration"
-      ;;
+  github)
+    mkdir -p .github/workflows
+    install_file "$template" "ci/github/workflows/ci.yml" ".github/workflows/ci.yml" "${vars[@]}"
+    install_file "$template" "ci/github/pull_request_template.md" ".github/pull_request_template.md" "${vars[@]}"
+    ;;
+  gitlab)
+    install_file "$template" "ci/gitlab/.gitlab-ci.yml" ".gitlab-ci.yml" "${vars[@]}"
+    mkdir -p .gitlab/merge_request_templates
+    install_file "$template" "ci/gitlab/merge_request_templates/default.md" ".gitlab/merge_request_templates/default.md" "${vars[@]}"
+    log_warning "GitLab CI support is experimental"
+    ;;
+  bitbucket)
+    install_file "$template" "ci/bitbucket/bitbucket-pipelines.yml" "bitbucket-pipelines.yml" "${vars[@]}"
+    install_file "$template" "ci/bitbucket/pull_request_template.md" "pull_request_template.md" "${vars[@]}"
+    log_warning "Bitbucket Pipelines support is experimental"
+    ;;
+  *)
+    log_warning "No CI provider detected, skipping CI configuration"
+    ;;
   esac
 
   echo
@@ -493,14 +496,14 @@ install_git_hooks() {
 
   log_step "Installing git hooks..."
 
-  if [[ -f ".git/hooks/pre-commit" ]] && [[ "$FORCE_INSTALL" != "true" ]]; then
+  if [[ -f ".git/hooks/pre-commit" ]] && [[ $FORCE_INSTALL != "true" ]]; then
     log_warning "Pre-commit hook exists, skipping (use --force to overwrite)"
     return
   fi
 
   mkdir -p .git/hooks
 
-  cat > .git/hooks/pre-commit <<'EOF'
+  cat >.git/hooks/pre-commit <<'EOF'
 #!/usr/bin/env bash
 # xcboot pre-commit hook
 # Runs preflight checks before commit
@@ -543,7 +546,7 @@ main() {
   local project_name
   project_name=$(detect_project_name)
 
-  if [[ -z "$project_name" ]]; then
+  if [[ -z $project_name ]]; then
     log_error "No Xcode project found in current directory"
     log_info "Make sure you're in a directory with a .xcodeproj file"
     log_info "Or use xcodegen with a project.yml file"
