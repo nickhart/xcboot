@@ -307,10 +307,24 @@ prompt_bundle_id() {
   fi
 }
 
-# Download file from GitHub
+# Download file from GitHub (or use local files for testing)
 download_file() {
   local template="$1"
   local file_path="$2"
+
+  # Support local testing mode via XCBOOT_LOCAL_PATH environment variable
+  if [[ -n "${XCBOOT_LOCAL_PATH:-}" ]]; then
+    local local_file="${XCBOOT_LOCAL_PATH}/templates/${template}/${file_path}"
+    if [[ -f "$local_file" ]]; then
+      cat "$local_file"
+      return 0
+    else
+      log_error "Local file not found: $local_file"
+      return 1
+    fi
+  fi
+
+  # Normal mode: download from GitHub
   local url="https://raw.githubusercontent.com/nickhart/xcboot/main/templates/${template}/${file_path}"
 
   if command_exists curl; then
