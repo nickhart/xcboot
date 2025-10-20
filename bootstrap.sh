@@ -46,7 +46,6 @@ log_step() {
 FORCE_INSTALL=false
 TEMPLATE="default"
 GENERATE_STATUS=true
-# shellcheck disable=SC2034  # Reserved for future MVVM structure generation (v0.2.0)
 CREATE_STRUCTURE=false
 
 # Parse arguments
@@ -66,7 +65,6 @@ parse_arguments() {
       shift
       ;;
     --structure)
-      # shellcheck disable=SC2034  # Reserved for future use
       CREATE_STRUCTURE=true
       shift
       ;;
@@ -536,6 +534,55 @@ install_status() {
   echo
 }
 
+# Create MVVM directory structure
+create_mvvm_structure() {
+  local project_name="$1"
+
+  log_step "Creating MVVM directory structure..."
+
+  # Main app directories
+  local app_dirs=(
+    "${project_name}/Models"
+    "${project_name}/Views"
+    "${project_name}/ViewModels"
+    "${project_name}/Services"
+    "${project_name}/Extensions"
+    "${project_name}/Utilities"
+  )
+
+  # Test directories
+  local test_dirs=(
+    "${project_name}Tests/ViewModels"
+    "${project_name}Tests/Services"
+    "${project_name}Tests/Extensions"
+    "${project_name}Tests/Utilities"
+  )
+
+  # Create app directories
+  for dir in "${app_dirs[@]}"; do
+    if [[ -d "$dir" ]]; then
+      log_warning "Directory exists, skipping: $dir"
+    else
+      mkdir -p "$dir"
+      touch "$dir/.gitkeep"
+      log_success "Created: $dir"
+    fi
+  done
+
+  # Create test directories
+  for dir in "${test_dirs[@]}"; do
+    if [[ -d "$dir" ]]; then
+      log_warning "Directory exists, skipping: $dir"
+    else
+      mkdir -p "$dir"
+      touch "$dir/.gitkeep"
+      log_success "Created: $dir"
+    fi
+  done
+
+  echo
+}
+
 # Main bootstrap function
 main() {
   parse_arguments "$@"
@@ -624,6 +671,10 @@ main() {
     install_status "$TEMPLATE" "${vars[@]}"
   fi
 
+  if $CREATE_STRUCTURE; then
+    create_mvvm_structure "$project_name"
+  fi
+
   # Step 8: Show success message and next steps
   log_success "xcboot installation complete!"
   echo
@@ -634,6 +685,9 @@ main() {
   echo "  • Git pre-commit hook"
   if $GENERATE_STATUS; then
     echo "  • STATUS.md documentation"
+  fi
+  if $CREATE_STRUCTURE; then
+    echo "  • MVVM directory structure (Models, Views, ViewModels, Services, Extensions, Utilities)"
   fi
   echo
   log_info "Next steps:"
