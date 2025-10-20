@@ -288,9 +288,9 @@ generate_project_yml() {
   local development_team="$5"
 
   cat <<EOF
-name: $project_name
+name: "$project_name"
 options:
-  bundleIdPrefix: $bundle_id_root
+  bundleIdPrefix: "$bundle_id_root"
   developmentLanguage: en
   deploymentTarget:
     iOS: "$deployment_target"
