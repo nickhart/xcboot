@@ -560,7 +560,7 @@ create_mvvm_structure() {
 
   # Create app directories
   for dir in "${app_dirs[@]}"; do
-    if [[ -d "$dir" ]]; then
+    if [[ -d $dir ]]; then
       log_warning "Directory exists, skipping: $dir"
     else
       mkdir -p "$dir"
@@ -571,7 +571,7 @@ create_mvvm_structure() {
 
   # Create test directories
   for dir in "${test_dirs[@]}"; do
-    if [[ -d "$dir" ]]; then
+    if [[ -d $dir ]]; then
       log_warning "Directory exists, skipping: $dir"
     else
       mkdir -p "$dir"
