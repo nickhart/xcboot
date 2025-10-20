@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    // Essential for xcboot development
+    "redhat.vscode-yaml",
+    "timonwong.shellcheck",
+    "foxundermoon.shell-format",
+    "yzhang.markdown-all-in-one",
+
+    // Recommended
+    "github.vscode-github-actions",
+
+    // Optional - useful for Swift project development
+    "sswg.swift-lang"
+  ]
+}

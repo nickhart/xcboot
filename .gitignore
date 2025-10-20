@@ -60,3 +60,10 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# VSCode
+#
+# Ignore user-specific settings but track workspace configuration
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json

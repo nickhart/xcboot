@@ -6,7 +6,6 @@
 
 # --- Core Dev Utilities -----------------------------------------------
 brew "git"
-brew "make"
 # JSON processing for Xcode simulator APIs
 brew "jq"
 # YAML processing and manipulation
