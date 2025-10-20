@@ -1,0 +1,21 @@
+# Brewfile for {{PROJECT_NAME}}
+# Usage:
+#   brew bundle install          # Install all dependencies
+#   brew bundle check            # Check if all dependencies are installed
+#   brew bundle cleanup --force  # Remove dependencies not in Brewfile
+
+# --- Required ---------------------------------------------------------
+# XcodeGen - Generate .xcodeproj from project.yml
+brew "xcodegen"
+
+# --- Code Quality -----------------------------------------------------
+# Swift linting
+brew "swiftlint"
+# Swift formatting
+brew "swiftformat"
+
+# --- Utilities --------------------------------------------------------
+# YAML processing (used by scripts to read project.yml and configs)
+brew "yq"
+# Optional: Prettier Xcode build output
+brew "xcbeautify"

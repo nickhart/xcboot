@@ -446,6 +446,8 @@ install_configs() {
 
   log_step "Installing configuration files..."
 
+  install_file "$template" "Brewfile" "Brewfile" "${vars[@]}"
+  install_file "$template" ".gitignore" ".gitignore" "${vars[@]}"
   install_file "$template" "configs/swiftlint.yml" ".swiftlint.yml" "${vars[@]}"
   install_file "$template" "configs/swiftformat" ".swiftformat" "${vars[@]}"
   install_file "$template" ".xcboot/config.yml" ".xcboot/config.yml" "${vars[@]}"

@@ -330,6 +330,8 @@ test_basic_installation() {
   verify_executable "scripts/test.sh" || ((errors++))
 
   # Verify configs installed
+  verify_file_exists "Brewfile" || ((errors++))
+  verify_file_exists ".gitignore" || ((errors++))
   verify_file_exists ".swiftlint.yml" || ((errors++))
   verify_file_exists ".swiftformat" || ((errors++))
   verify_file_exists ".xcboot/config.yml" || ((errors++))
@@ -373,9 +375,13 @@ test_template_variables() {
   # Check .swiftlint.yml has project name
   verify_template_replaced ".swiftlint.yml" "PROJECT_NAME" "MyApp" || ((errors++))
 
+  # Check Brewfile has project name
+  verify_template_replaced "Brewfile" "PROJECT_NAME" "MyApp" || ((errors++))
+
   # Verify no unreplaced variables in key files
   verify_no_template_vars ".xcboot/config.yml" || ((errors++))
   verify_no_template_vars ".swiftlint.yml" || ((errors++))
+  verify_no_template_vars "Brewfile" || ((errors++))
 
   if [[ $errors -eq 0 ]]; then
     log_success "Test 2 passed ✓"
