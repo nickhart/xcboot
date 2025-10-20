@@ -48,9 +48,16 @@ xcboot/
 │   ├── lint.sh           # Lint xcboot scripts
 │   ├── format.sh         # Format xcboot scripts
 │   ├── validate.sh       # Validate YAML templates
-│   └── test.sh           # Test xcboot
+│   ├── test.sh           # Test xcboot
+│   └── integration-test.sh # Integration tests
 └── templates/            # Template files
     └── default/          # Default template
+        ├── scripts/      # User project scripts
+        │   ├── init-project-yml.sh  # Generate project.yml
+        │   ├── build.sh
+        │   ├── test.sh
+        │   └── ...
+        └── configs/      # Configuration files
 ```
 
 ## Development Workflow

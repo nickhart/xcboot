@@ -419,6 +419,7 @@ install_scripts() {
 
   local scripts=(
     "_helpers.sh:scripts/_helpers.sh"
+    "init-project-yml.sh:scripts/init-project-yml.sh"
     "build.sh:scripts/build.sh"
     "test.sh:scripts/test.sh"
     "lint.sh:scripts/lint.sh"
@@ -448,6 +449,7 @@ install_configs() {
 
   install_file "$template" "Brewfile" "Brewfile" "${vars[@]}"
   install_file "$template" ".gitignore" ".gitignore" "${vars[@]}"
+  install_file "$template" ".swift-version" ".swift-version" "${vars[@]}"
   install_file "$template" "configs/swiftlint.yml" ".swiftlint.yml" "${vars[@]}"
   install_file "$template" "configs/swiftformat" ".swiftformat" "${vars[@]}"
   install_file "$template" ".xcboot/config.yml" ".xcboot/config.yml" "${vars[@]}"
@@ -534,45 +536,6 @@ install_status() {
   echo
 }
 
-# Generate project.yml from existing .xcodeproj using xcodegen dump
-generate_project_yml() {
-  local project_name="$1"
-  local xcodeproj="${project_name}.xcodeproj"
-
-  # Check if xcodegen is available
-  if ! command_exists xcodegen; then
-    log_warning "xcodegen not installed - skipping project.yml generation"
-    log_info "Install with: brew bundle"
-    log_info "Then run: xcodegen dump --spec project.yml --project $xcodeproj"
-    return 0
-  fi
-
-  # Check if project.yml already exists
-  if [[ -f "project.yml" ]] && [[ $FORCE_INSTALL != "true" ]]; then
-    log_info "project.yml already exists (use --force to regenerate)"
-    return 0
-  fi
-
-  # Check if .xcodeproj exists
-  if [[ ! -d $xcodeproj ]]; then
-    log_warning "No .xcodeproj found - skipping project.yml generation"
-    return 0
-  fi
-
-  log_step "Generating project.yml from $xcodeproj..."
-
-  # Run xcodegen dump
-  if xcodegen dump --spec project.yml --project "$xcodeproj" 2>/dev/null; then
-    log_success "Generated project.yml from $xcodeproj"
-    log_info "You can now regenerate .xcodeproj anytime with: xcodegen"
-  else
-    log_warning "Failed to generate project.yml from $xcodeproj"
-    log_info "You can manually create it later with: xcodegen dump"
-  fi
-
-  echo
-}
-
 # Main bootstrap function
 main() {
   parse_arguments "$@"
@@ -636,9 +599,6 @@ main() {
   log_success "Bundle ID root: $bundle_id_root"
   echo
 
-  # Step 6.5: Generate project.yml (optional - requires xcodegen)
-  generate_project_yml "$project_name"
-
   # Prepare variables array for installation functions
   local vars=(
     "$project_name"
@@ -669,23 +629,16 @@ main() {
   echo
   log_info "What was installed:"
   echo "  • Scripts in ./scripts/"
-  echo "  • Configuration files: Brewfile, .gitignore, .swiftlint.yml, .swiftformat, .xcboot/config.yml"
+  echo "  • Configuration files: Brewfile, .gitignore, .swift-version, .swiftlint.yml, .swiftformat, .xcboot/config.yml"
   echo "  • CI configuration for $git_provider"
   echo "  • Git pre-commit hook"
   if $GENERATE_STATUS; then
     echo "  • STATUS.md documentation"
   fi
-  if [[ -f "project.yml" ]]; then
-    echo "  • project.yml (XcodeGen spec)"
-  fi
   echo
   log_info "Next steps:"
   echo "  1. Install dependencies: brew bundle"
-  if [[ ! -f "project.yml" ]] && command_exists xcodegen; then
-    echo "  2. Generate project.yml: xcodegen dump --spec project.yml --project ${project_name}.xcodeproj"
-  elif [[ ! -f "project.yml" ]]; then
-    echo "  2. After installing dependencies, generate project.yml: xcodegen dump"
-  fi
+  echo "  2. Generate project.yml (XcodeGen spec): ./scripts/init-project-yml.sh"
   echo "  3. Review and customize .xcboot/config.yml if needed"
   echo "  4. Run ./scripts/simulator.sh to set up simulators"
   echo "  5. Run ./scripts/preflight.sh to verify everything works"

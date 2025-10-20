@@ -45,6 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/nickhart/xcboot/main/bootstrap.sh |
 
 ### Automation Scripts (`./scripts/`)
 
+- **init-project-yml.sh** - Generate project.yml from existing .xcodeproj (for XcodeGen adoption)
 - **build.sh** - Build your project with xcodebuild or xcodegen
 - **test.sh** - Run unit and UI tests with coverage
 - **lint.sh** - Run SwiftLint on your codebase
@@ -57,6 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/nickhart/xcboot/main/bootstrap.sh |
 
 - **Brewfile** - Development dependencies (xcodegen, swiftlint, swiftformat, yq, xcbeautify)
 - **.gitignore** - XcodeGen-optimized (ignores `*.xcodeproj` and `*.xcworkspace`)
+- **.swift-version** - Swift version for consistency across team and CI
 - **.swiftlint.yml** - SwiftLint configuration with sensible rules
 - **.swiftformat** - SwiftFormat configuration
 - **.xcboot/config.yml** - xcboot configuration (simulator settings, project metadata)
@@ -83,6 +85,9 @@ Auto-detects git provider and installs appropriate CI config:
 After bootstrapping, use the installed scripts:
 
 ```bash
+# Generate project.yml for XcodeGen (one-time setup)
+./scripts/init-project-yml.sh
+
 # Set up simulators
 ./scripts/simulator.sh
 

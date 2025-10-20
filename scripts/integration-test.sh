@@ -332,6 +332,7 @@ test_basic_installation() {
   # Verify configs installed
   verify_file_exists "Brewfile" || ((errors++))
   verify_file_exists ".gitignore" || ((errors++))
+  verify_file_exists ".swift-version" || ((errors++))
   verify_file_exists ".swiftlint.yml" || ((errors++))
   verify_file_exists ".swiftformat" || ((errors++))
   verify_file_exists ".xcboot/config.yml" || ((errors++))
@@ -572,6 +573,193 @@ test_no_git_repo() {
   fi
 }
 
+# Create mock test files for test framework detection
+create_mock_test_files() {
+  local project_name="$1"
+  local test_framework="$2"
+
+  local test_dir="${project_name}Tests"
+  mkdir -p "$test_dir"
+
+  if [[ $test_framework == "swift-testing" ]]; then
+    # Create swift-testing test file
+    cat >"$test_dir/${project_name}Tests.swift" <<'EOF'
+import Testing
+@testable import TestApp
+
+@Suite("Basic Tests")
+struct BasicTests {
+  @Test func example() {
+    #expect(true)
+  }
+}
+EOF
+  elif [[ $test_framework == "xctest" ]]; then
+    # Create XCTest test file
+    cat >"$test_dir/${project_name}Tests.swift" <<'EOF'
+import XCTest
+@testable import TestApp
+
+class BasicTests: XCTestCase {
+  func testExample() {
+    XCTAssertTrue(true)
+  }
+}
+EOF
+  fi
+
+  log_debug "Created mock test file with $test_framework"
+}
+
+# Run init-project-yml.sh
+run_init_project_yml() {
+  local flags="${1:-}"
+
+  log_debug "Running init-project-yml.sh with flags: $flags"
+
+  # Ensure script exists and is executable
+  if [[ ! -x "scripts/init-project-yml.sh" ]]; then
+    log_error "scripts/init-project-yml.sh not found or not executable"
+    return 1
+  fi
+
+  # Run in non-interactive mode (pipe empty input)
+  if $VERBOSE; then
+    if [[ -n $flags ]]; then
+      # shellcheck disable=SC2086
+      echo "" | bash scripts/init-project-yml.sh $flags
+    else
+      echo "" | bash scripts/init-project-yml.sh --non-interactive
+    fi
+  else
+    if [[ -n $flags ]]; then
+      # shellcheck disable=SC2086
+      echo "" | bash scripts/init-project-yml.sh $flags >/dev/null 2>&1
+    else
+      echo "" | bash scripts/init-project-yml.sh --non-interactive >/dev/null 2>&1
+    fi
+  fi
+}
+
+# Test 8: init-project-yml.sh with flags (non-interactive)
+test_init_project_yml_noninteractive() {
+  log_step "Test 8: init-project-yml.sh (non-interactive)"
+
+  local test_dir="$TEST_ROOT/test-init-yml-noninteractive"
+  create_mock_project "$test_dir" "InitYmlApp" "17.5" "com.example.InitYmlApp"
+  init_git_repo "github"
+
+  # Run bootstrap first
+  run_bootstrap
+
+  # Run init-project-yml.sh with all flags
+  run_init_project_yml "--non-interactive --bundle-id-root com.example"
+
+  local errors=0
+
+  # Verify project.yml was created
+  verify_file_exists "project.yml" || ((errors++))
+
+  if [[ -f "project.yml" ]]; then
+    # Verify project.yml contains expected values
+    verify_template_replaced "project.yml" "name" "InitYmlApp" || ((errors++))
+    verify_template_replaced "project.yml" "bundleIdPrefix" "com.example" || ((errors++))
+    verify_template_replaced "project.yml" "deploymentTarget" "17.5" || ((errors++))
+
+    # Verify no template variables remain
+    if grep -q "{{.*}}" "project.yml" 2>/dev/null; then
+      log_error "Template variables found in generated project.yml"
+      ((errors++))
+    else
+      log_debug "✓ No template variables in project.yml"
+    fi
+  fi
+
+  if [[ $errors -eq 0 ]]; then
+    log_success "Test 8 passed ✓"
+    return 0
+  else
+    log_error "Test 8 failed with $errors error(s)"
+    return 1
+  fi
+}
+
+# Test 9: Test framework detection (swift-testing)
+test_framework_detection_swift_testing() {
+  log_step "Test 9: Test framework detection (swift-testing)"
+
+  local test_dir="$TEST_ROOT/test-framework-swift-testing"
+  create_mock_project "$test_dir" "SwiftTestingApp"
+  init_git_repo "github"
+
+  # Create test files with swift-testing
+  create_mock_test_files "SwiftTestingApp" "swift-testing"
+
+  # Run bootstrap
+  run_bootstrap
+
+  # Run init-project-yml.sh (should detect swift-testing)
+  run_init_project_yml "--non-interactive --bundle-id-root com.test"
+
+  local errors=0
+
+  # Verify project.yml was created
+  verify_file_exists "project.yml" || ((errors++))
+
+  # Note: Currently our init-project-yml.sh detects but doesn't use test framework in output
+  # This test verifies the script runs successfully with swift-testing tests present
+  if [[ -f "project.yml" ]]; then
+    verify_template_replaced "project.yml" "SwiftTestingApp" "SwiftTestingApp" || ((errors++))
+    log_debug "✓ init-project-yml.sh ran successfully with swift-testing tests"
+  fi
+
+  if [[ $errors -eq 0 ]]; then
+    log_success "Test 9 passed ✓"
+    return 0
+  else
+    log_error "Test 9 failed with $errors error(s)"
+    return 1
+  fi
+}
+
+# Test 10: Test framework detection (XCTest)
+test_framework_detection_xctest() {
+  log_step "Test 10: Test framework detection (XCTest)"
+
+  local test_dir="$TEST_ROOT/test-framework-xctest"
+  create_mock_project "$test_dir" "XCTestApp"
+  init_git_repo "github"
+
+  # Create test files with XCTest
+  create_mock_test_files "XCTestApp" "xctest"
+
+  # Run bootstrap
+  run_bootstrap
+
+  # Run init-project-yml.sh (should detect XCTest)
+  run_init_project_yml "--non-interactive --bundle-id-root com.test"
+
+  local errors=0
+
+  # Verify project.yml was created
+  verify_file_exists "project.yml" || ((errors++))
+
+  # Note: Currently our init-project-yml.sh detects but doesn't use test framework in output
+  # This test verifies the script runs successfully with XCTest tests present
+  if [[ -f "project.yml" ]]; then
+    verify_template_replaced "project.yml" "XCTestApp" "XCTestApp" || ((errors++))
+    log_debug "✓ init-project-yml.sh ran successfully with XCTest tests"
+  fi
+
+  if [[ $errors -eq 0 ]]; then
+    log_success "Test 10 passed ✓"
+    return 0
+  else
+    log_error "Test 10 failed with $errors error(s)"
+    return 1
+  fi
+}
+
 # Cleanup test directory
 cleanup() {
   if [[ -d $TEST_ROOT ]]; then
@@ -612,7 +800,7 @@ EOF
 
   # Track failures
   local failed=0
-  local total=7
+  local total=10
 
   # Run tests
   test_basic_installation || ((failed++))
@@ -634,6 +822,15 @@ EOF
   echo
 
   test_no_git_repo || ((failed++))
+  echo
+
+  test_init_project_yml_noninteractive || ((failed++))
+  echo
+
+  test_framework_detection_swift_testing || ((failed++))
+  echo
+
+  test_framework_detection_xctest || ((failed++))
   echo
 
   # Summary
