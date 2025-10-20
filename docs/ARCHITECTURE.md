@@ -130,6 +130,8 @@ MyApp/
 │
 ├── .xcboot.yml             # User overrides (gitignored)
 │
+├── Brewfile                # Development dependencies
+├── .gitignore              # XcodeGen-optimized (ignores *.xcodeproj)
 ├── .swiftlint.yml          # SwiftLint config
 ├── .swiftformat            # SwiftFormat config
 │

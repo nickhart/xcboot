@@ -55,6 +55,8 @@ curl -fsSL https://raw.githubusercontent.com/nickhart/xcboot/main/bootstrap.sh |
 
 ### Configuration Files
 
+- **Brewfile** - Development dependencies (xcodegen, swiftlint, swiftformat, yq, xcbeautify)
+- **.gitignore** - XcodeGen-optimized (ignores `*.xcodeproj` and `*.xcworkspace`)
 - **.swiftlint.yml** - SwiftLint configuration with sensible rules
 - **.swiftformat** - SwiftFormat configuration
 - **.xcboot/config.yml** - xcboot configuration (simulator settings, project metadata)

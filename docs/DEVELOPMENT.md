@@ -19,6 +19,23 @@ This installs:
 - `jq` - JSON processor
 - `gh` - GitHub CLI
 
+### Editor Setup (Optional)
+
+If using VSCode, the repository includes workspace configuration:
+
+- **Recommended extensions** - Install when prompted for:
+  - YAML editing (redhat.vscode-yaml)
+  - Shell script linting (timonwong.shellcheck)
+  - Shell script formatting (foxundermoon.shell-format)
+  - Markdown editing (yzhang.markdown-all-in-one)
+  - GitHub Actions (github.vscode-github-actions)
+
+- **Workspace settings** - Pre-configured for:
+  - Automatic shellcheck integration
+  - shfmt formatting on save
+  - YAML schema validation
+  - Markdown optimizations
+
 ### Repository Structure
 
 ```

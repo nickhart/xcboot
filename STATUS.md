@@ -125,6 +125,8 @@ Ported from SwiftProjectTemplate and enhanced:
 
 ### Phase 4: Templates ✅ Complete
 
+- [x] templates/default/Brewfile - Development dependencies (xcodegen, swiftlint, swiftformat, yq, xcbeautify)
+- [x] templates/default/.gitignore - XcodeGen-optimized gitignore (ignores *.xcodeproj, *.xcworkspace)
 - [x] templates/default/configs/swiftlint.yml - SwiftLint configuration
 - [x] templates/default/configs/swiftformat - SwiftFormat configuration
 - [x] templates/default/project.yml - XcodeGen config template
@@ -250,12 +252,17 @@ xcboot/
 │       │       └── pull_request_template.md
 │       ├── .xcboot/         # xcboot config template
 │       │   └── config.yml
+│       ├── Brewfile         # Development dependencies template
+│       ├── .gitignore       # XcodeGen-optimized gitignore template
 │       ├── project.yml      # XcodeGen project template
 │       └── STATUS.md        # Status template for user projects
 ├── docs/                    # Documentation
 │   ├── ARCHITECTURE.md      # Technical architecture
 │   ├── TEMPLATES.md         # Template system guide
 │   └── DEVELOPMENT.md       # Development guide
+├── .vscode/                 # VSCode workspace configuration
+│   ├── extensions.json      # Recommended extensions
+│   └── settings.json        # Workspace settings
 └── .github/
     ├── workflows/
     │   └── ci.yml           # CI for xcboot (5 jobs)
@@ -413,7 +420,7 @@ MIT License - see LICENSE file
 
 ---
 
-**Last Updated**: 2025-10-19
+**Last Updated**: 2025-10-20
 **Current Version**: 0.1.0
 **Status**: ✅ Complete - Ready for initial release
 **Next Milestone**: v0.1.0 Release

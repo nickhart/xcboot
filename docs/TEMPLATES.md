@@ -16,6 +16,8 @@ templates/mytemplate/
 ├── configs/              # Configuration files
 ├── ci/                   # CI configurations
 ├── .xcboot/              # xcboot config
+├── Brewfile              # Development dependencies (optional)
+├── .gitignore            # Git ignore rules (optional)
 ├── project.yml           # XcodeGen template (optional)
 └── STATUS.md             # Status template (optional)
 ```
@@ -36,6 +38,13 @@ The `default` template includes:
 | `preflight.sh` | Run all checks before push |
 | `simulator.sh` | Manage iOS simulators |
 | `pre-commit.sh` | Git pre-commit hook script |
+
+### Root Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `Brewfile` | Development dependencies (xcodegen, swiftlint, swiftformat, yq, xcbeautify) |
+| `.gitignore` | XcodeGen-optimized gitignore (ignores `*.xcodeproj`, `*.xcworkspace`) |
 
 ### Configs (`configs/`)
 
