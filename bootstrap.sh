@@ -298,7 +298,7 @@ prompt_bundle_id() {
     return
   fi
 
-  echo -n "Enter bundle ID root [$default_bundle_id]: "
+  echo -n "Enter bundle ID root [$default_bundle_id]: " >&2
   read -r bundle_id
 
   if [[ -z $bundle_id ]]; then

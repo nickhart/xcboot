@@ -269,7 +269,7 @@ prompt_with_default() {
     return
   fi
 
-  echo -n "$prompt [$default]: "
+  echo -n "$prompt [$default]: " >&2
   read -r value
 
   if [[ -z $value ]]; then
